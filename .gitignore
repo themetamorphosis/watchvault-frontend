@@ -43,9 +43,7 @@ yarn-error.log*
 next-env.d.ts
 
 # Custom project ignores
-/lib/generated/prisma
 *.txt
-test-prisma.js
 
 # IDEs and Editors
 .idea/
