@@ -9,6 +9,7 @@ type ItemInput = {
     favorite: boolean;
     genres?: string[];
     notes?: string;
+    description?: string;
     year?: number;
     endYear?: number;
     running?: boolean;
@@ -112,7 +113,7 @@ export async function toggleFavorite(id: string) {
     return { error: "Failed to toggle favorite" };
 }
 
-export async function updateMetadata(id: string, payload: { coverUrl?: string; genres?: string[]; runtime?: number }) {
+export async function updateMetadata(id: string, payload: { coverUrl?: string; genres?: string[]; description?: string; runtime?: number }) {
     const headers = getAuthHeaders();
     const res = await fetch(`${API_BASE}/watchlist/${id}`, {
         method: "PATCH",

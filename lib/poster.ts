@@ -10,6 +10,6 @@ export async function fetchPoster(title: string, mediaType: MediaType, year?: nu
   const r = await fetch(`${API_BASE}/media/poster?${params.toString()}`);
   if (!r.ok) return null;
 
-  const data = (await r.json()) as { coverUrl: string | null; genres: string[] };
-  return { coverUrl: data?.coverUrl ?? null, genres: data?.genres ?? [] };
+  const data = (await r.json()) as { coverUrl: string | null; genres: string[]; description: string | null };
+  return { coverUrl: data?.coverUrl ?? null, genres: data?.genres ?? [], description: data?.description ?? null };
 }

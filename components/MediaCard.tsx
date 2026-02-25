@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import type { Item, Status } from "@/lib/types";
-import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { useOutsideClick } from "@/hooks/use-outside-click";
 
 function statusText(s: Status) {
   if (s === "watched") return "Watched";
@@ -10,19 +12,12 @@ function statusText(s: Status) {
   return "Wishlisted";
 }
 
-function emitGlow(x: number, y: number, boost: number) {
-  window.dispatchEvent(new CustomEvent("wv-glow", { detail: { x, y, boost } }));
-}
 
 function yearLabel(item: Item): string {
-  // Movies: single year only
   if (item.mediaType === "movie") return item.year ? String(item.year) : "";
-
-  // TV/Anime: range or running
   const start = item.year;
   const end = item.endYear;
   const running = item.running;
-
   if (start && end) return `${start}–${end}`;
   if (start && running) return `${start}–Running`;
   if (!start && running) return "Running";
@@ -32,30 +27,28 @@ function yearLabel(item: Item): string {
 
 export default function MediaCard({
   item,
-  onNeedCover,
+  layoutId,
   onFav,
   onOpen,
+  onEdit,
+  onDelete,
 }: {
   item: Item;
-  onNeedCover: () => void | Promise<void>;
+  layoutId?: string;
   onFav: () => void;
   onOpen: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const [attempted, setAttempted] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const glowRaf = useRef<number | null>(null);
 
-  // cover/metadata fetch (one time)
-  useEffect(() => {
-    const hasCover = !!item.coverUrl;
-    const hasGenres = !!(item.genres && item.genres.length > 0);
-    if (hasCover && hasGenres) return;
-    if (attempted) return;
-    setAttempted(true);
-    onNeedCover();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item.id, item.coverUrl, item.genres]);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  useOutsideClick(menuRef, closeMenu);
 
   // reset if url changes
   useEffect(() => {
@@ -65,46 +58,31 @@ export default function MediaCard({
   const y = yearLabel(item);
   const meta = [y, ...(item.genres?.slice(0, 2) || [])].filter(Boolean).join(" • ");
 
-  // --- Fancy tilt ---
-  const rx = useMotionValue(0);
-  const ry = useMotionValue(0);
-  const sx = useSpring(rx, { stiffness: 280, damping: 22, mass: 0.5 });
-  const sy = useSpring(ry, { stiffness: 280, damping: 22, mass: 0.5 });
-  const transform = useMotionTemplate`perspective(900px) rotateX(${sx}deg) rotateY(${sy}deg) translateZ(0)`;
-
-  function handleMove(e: React.PointerEvent) {
-    const el = ref.current;
-    if (!el) return;
-
-    const r = el.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width; // 0..1
-    const py = (e.clientY - r.top) / r.height; // 0..1
-
-    const tilt = 8;
-    rx.set((0.5 - py) * tilt);
-    ry.set((px - 0.5) * tilt);
-
-    if (glowRaf.current) cancelAnimationFrame(glowRaf.current);
-    glowRaf.current = requestAnimationFrame(() => emitGlow(e.clientX, e.clientY, 1.0));
-  }
-
-  function handleEnter() {
-    const el = ref.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    emitGlow(r.left + r.width / 2, r.top + r.height / 2, 1.0);
-  }
-
-  function handleLeave() {
-    rx.set(0);
-    ry.set(0);
-    emitGlow(-9999, -9999, 0.25);
-  }
 
   function handleFavActivate(e: React.SyntheticEvent) {
     e.preventDefault();
     e.stopPropagation();
     onFav();
+  }
+
+  function handleMenuToggle(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setMenuOpen((v) => !v);
+  }
+
+  function handleMenuEdit(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setMenuOpen(false);
+    onEdit();
+  }
+
+  function handleMenuDelete(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setMenuOpen(false);
+    onDelete();
   }
 
   return (
@@ -116,29 +94,26 @@ export default function MediaCard({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onOpen();
       }}
-      onPointerMove={handleMove}
-      onPointerEnter={handleEnter}
-      onPointerLeave={handleLeave}
-      style={{ transform }}
-      whileHover={{ y: -8, scale: 1.04 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: "spring", stiffness: 320, damping: 22 }}
+      whileHover={{ y: -12, scale: 1.07 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 320, damping: 20 }}
       className="group relative cursor-pointer select-none text-left outline-none"
       aria-label={`Open ${item.title}`}
       title="Open"
     >
-      {/* Card shell */}
-      <div
+      <motion.div
+        layoutId={layoutId} // Core visual container transforms into the modal
         className="
           relative overflow-hidden rounded-2xl bg-white/[0.035] ring-1 ring-white/10
-          group-hover:ring-white/25
+          group-hover:ring-white/30
           shadow-[0_10px_40px_-20px_rgba(0,0,0,0.9)]
+          group-hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,1),0_0_30px_-5px_rgba(56,189,248,0.12)]
+          transition-shadow duration-300
         "
       >
         {/* Poster */}
-        <div className="aspect-[2/3] w-full bg-white/[0.03]">
+        <motion.div layoutId={layoutId ? `img-${layoutId}` : undefined} className="aspect-[2/3] w-full bg-white/[0.03]">
           {item.coverUrl && !imgFailed ? (
-
             <motion.img
               src={item.coverUrl}
               alt={item.title}
@@ -158,6 +133,56 @@ export default function MediaCard({
           ) : (
             <div className="h-full w-full animate-pulse bg-white/[0.06]" />
           )}
+        </motion.div>
+
+        {/* 3-dot kebab menu */}
+        <div className="absolute top-2 right-2 z-20">
+          <motion.button
+            onClick={handleMenuToggle}
+            initial={{ opacity: 0 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className={`
+              flex h-8 w-8 items-center justify-center rounded-full
+              bg-black/50 ring-1 ring-white/15 backdrop-blur-xl
+              hover:bg-black/70 hover:ring-white/25
+              transition-all duration-200
+              ${menuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
+            `}
+            aria-label="More options"
+          >
+            <MoreVertical className="h-4 w-4 text-white/80" />
+          </motion.button>
+
+          {/* Dropdown */}
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.div
+                ref={menuRef}
+                initial={{ opacity: 0, y: -6, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.92 }}
+                transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute right-0 top-10 z-30 w-36 overflow-hidden rounded-xl bg-zinc-900/95 ring-1 ring-white/12 shadow-2xl backdrop-blur-2xl"
+              >
+                <button
+                  onClick={handleMenuEdit}
+                  className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm font-medium text-white/75 hover:bg-white/[0.08] hover:text-white transition-colors"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit
+                </button>
+                <div className="mx-2 h-px bg-white/[0.08]" />
+                <button
+                  onClick={handleMenuDelete}
+                  className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Premium light sweep */}
@@ -167,7 +192,7 @@ export default function MediaCard({
           transition={{ duration: 0.35 }}
           style={{
             background:
-              "radial-gradient(450px 250px at 30% 10%, rgba(255,255,255,0.18), transparent 60%)",
+              "radial-gradient(450px 250px at 30% 10%, rgba(255,255,255,0.22), transparent 60%)",
           }}
         />
 
@@ -177,11 +202,11 @@ export default function MediaCard({
         <div className="absolute inset-x-0 bottom-0 p-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold">{item.title}</div>
+              <motion.div layoutId={layoutId ? `title-${layoutId}` : undefined} className="truncate text-sm font-semibold">{item.title}</motion.div>
               <div className="mt-0.5 truncate text-xs text-white/70">{meta || " "}</div>
             </div>
 
-            {/* Favorite control (NOT a real <button>) */}
+            {/* Favorite control */}
             <motion.div
               role="button"
               tabIndex={0}
@@ -203,7 +228,7 @@ export default function MediaCard({
             {statusText(item.status)}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Glow behind */}
       <motion.div
@@ -213,9 +238,10 @@ export default function MediaCard({
         transition={{ duration: 0.25 }}
         style={{
           background:
-            "radial-gradient(closest-side, rgba(56,189,248,0.22), transparent), radial-gradient(closest-side, rgba(232,121,249,0.16), transparent)",
+            "radial-gradient(closest-side, rgba(56,189,248,0.28), transparent), radial-gradient(closest-side, rgba(232,121,249,0.20), transparent)",
         }}
       />
-    </motion.div>
+    </motion.div >
   );
 }
+

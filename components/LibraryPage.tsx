@@ -10,6 +10,7 @@ import { fetchPoster } from '@/lib/poster';
 import MediaCard from '@/components/MediaCard';
 import EditorModal from '@/components/EditorModal';
 import ImportModal from '@/components/ImportModal';
+import ExpandableCardOverlay from '@/components/ExpandableCardOverlay';
 import { useSession } from '@/components/SessionProvider';
 import {
   Film,
@@ -168,18 +169,22 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
   const userId = session?.user?.id || 'guest';
   const [items, setItems] = useState<Item[]>([]);
   const [ready, setReady] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const [status, setStatus] = useState<Status | 'all'>('all');
   const [query, setQuery] = useState('');
   const [onlyFav, setOnlyFav] = useState(false);
   const [sort, setSort] = useState<'recent' | 'title' | 'year'>('recent');
+  // UI states
   const [searchOpen, setSearchOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<Item | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [expandedItem, setExpandedItem] = useState<Item | null>(null);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const layoutGroupId = React.useId();
   const [, startTransition] = useTransition();
 
   const [visibleCount, setVisibleCount] = useState(30);
@@ -204,6 +209,7 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
 
   /* ── Data loading from server & cache ── */
   useEffect(() => {
+    setMounted(true);
     // 1. Instantly parse and display cache
     try {
       const cached = localStorage.getItem(`wv-cache-items-${userId}`);
@@ -264,6 +270,8 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
     return arr;
   }, [pageItems, status, onlyFav, query, sort]);
 
+  const renderItems = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+
   /* ── Counts per status ── */
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = { all: pageItems.length };
@@ -277,18 +285,19 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
 
   /* ── Callbacks ── */
   const ensureCover = useCallback(async (it: Item): Promise<void> => {
-    if (it.coverUrl && it.genres && it.genres.length > 0) return;
+    if (it.coverUrl && it.genres && it.genres.length > 0 && it.description) return;
     const fetchResult = await fetchPoster(it.title, it.mediaType, it.year);
     if (!fetchResult) {
       try { sessionStorage.setItem(`wv-poster-skip-${it.id}`, '1'); } catch { }
       return;
     }
 
-    const { coverUrl, genres } = fetchResult;
+    const { coverUrl, genres, description } = fetchResult;
     const hasNewCover = !it.coverUrl && coverUrl;
     const hasNewGenres = (!it.genres || it.genres.length === 0) && genres && genres.length > 0;
+    const hasNewDesc = !it.description && description;
 
-    if (!hasNewCover && !hasNewGenres) {
+    if (!hasNewCover && !hasNewGenres && !hasNewDesc) {
       try { sessionStorage.setItem(`wv-poster-skip-${it.id}`, '1'); } catch { }
       return;
     }
@@ -300,7 +309,7 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
           ...x,
           ...(hasNewCover ? { coverUrl } : {}),
           ...(hasNewGenres ? { genres } : {}),
-          updatedAt: Date.now()
+          ...(hasNewDesc ? { description } : {})
         }
         : x
     ));
@@ -308,7 +317,8 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
     startTransition(() => {
       updateMetadata(it.id, {
         ...(hasNewCover ? { coverUrl } : {}),
-        ...(hasNewGenres ? { genres } : {})
+        ...(hasNewGenres ? { genres } : {}),
+        ...(hasNewDesc ? { description } : {})
       });
     });
   }, []);
@@ -317,10 +327,10 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
   const syncingRefs = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!ready || items.length === 0) return;
+    if (!ready || renderItems.length === 0) return;
 
     // Find items that need metadata and aren't being synced yet
-    const missing = items.filter((it) => {
+    const missing = renderItems.filter((it) => {
       if (syncingRefs.current.has(it.id)) return false;
       if (it.coverUrl && it.genres && it.genres.length > 0) return false;
       try { if (sessionStorage.getItem(`wv-poster-skip-${it.id}`)) return false; } catch { }
@@ -329,14 +339,14 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
 
     if (missing.length === 0) return;
 
-    // Process in batches (6 at a time) — cache hits are instant, so larger batches are fine
-    const batch = missing.slice(0, 6);
+    // Process in batches (4 at a time to keep connection pool light)
+    const batch = missing.slice(0, 4);
 
     batch.forEach((it) => {
       syncingRefs.current.add(it.id);
       ensureCover(it);
     });
-  }, [items, ready, ensureCover]);
+  }, [renderItems, ready, ensureCover]);
 
   const openCreate = useCallback(() => {
     const now = Date.now();
@@ -344,11 +354,13 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
       id: crypto.randomUUID?.() ?? Math.random().toString(16).slice(2),
       title: '',
       mediaType,
-      status: 'watched',
+      status: 'pending',
       favorite: false,
+      year: new Date().getFullYear(),
       createdAt: now,
       updatedAt: now,
-    });
+      genres: [],
+    } as Item);
     setEditOpen(true);
   }, [mediaType]);
 
@@ -596,9 +608,13 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-2">
             {title}
           </h1>
-          <p className="text-sm text-white/35 mb-8">
-            {pageItems.length} {pageItems.length === 1 ? 'item' : 'items'} in your library
-          </p>
+          <div className="text-sm text-white/35 mb-8 h-5 flex items-center">
+            {!mounted || (!ready && items.length === 0) ? (
+              <div className="h-4 w-32 bg-white/[0.05] rounded animate-pulse" />
+            ) : (
+              <>{pageItems.length} {pageItems.length === 1 ? 'item' : 'items'} in your library</>
+            )}
+          </div>
         </motion.div>
 
         {/* Raycast-style status tabs */}
@@ -642,125 +658,137 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
       </div>
 
       {/* ━━━ MEDIA GRID ━━━ */}
-      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-6 lg:px-10 pb-12">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${status}-${onlyFav}-${sort}-${query}`}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {filtered.length > 0 ? (
-              <>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8">
-                  {filtered.slice(0, visibleCount).map((it, i) => (
-                    <motion.div
-                      key={it.id}
-                      initial={{ opacity: 0, y: 16 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        delay: i < 20 ? Math.min(i * 0.03, 0.3) : 0,
-                        duration: 0.4,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    >
-                      <MediaCard
-                        item={it}
-                        onNeedCover={() => ensureCover(it)}
-                        onFav={() => toggleFav(it.id)}
-                        onOpen={() => openEdit(it)}
-                      />
-                    </motion.div>
+      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-6 lg:px-10">
+        <LayoutGroup id="media-grid">
+          <AnimatePresence>
+            <motion.div
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-x-4 gap-y-8 pb-10"
+            >
+              {!mounted || (!ready && items.length === 0) ? (
+                <>
+                  {Array.from({ length: 30 }).map((_, i) => (
+                    <div key={`skeleton-${i}`} className="aspect-[2/3] w-full rounded-2xl bg-white/[0.02] animate-pulse" />
                   ))}
+                </>
+              ) : renderItems.length > 0 ? (
+                <>
+                  {renderItems.map((item) => (
+                    <MediaCard
+                      key={item.id}
+                      item={item}
+                      layoutId={`card-${item.id}`}
+                      onOpen={() => setExpandedItem(item)}
+                      onEdit={() => openEdit(item)}
+                      onDelete={() => remove(item.id)}
+                      onFav={() => toggleFav(item.id)}
+                    />
+                  ))}
+                  {visibleCount < filtered.length && (
+                    <div ref={loadMoreRef} className="col-span-full h-20 w-full" />
+                  )}
+                </>
+              ) : (
+                <div className="flex h-[40vh] items-center justify-center text-center col-span-full">
+                  <div className="max-w-md">
+                    <div className="mb-4 text-6xl opacity-40">🎬</div>
+                    <h3 className="text-xl font-medium text-white/90">No titles found</h3>
+                    <p className="mt-2 text-sm text-white/50">
+                      Try adjusting your filters or search query, or add something new to your library.
+                    </p>
+                  </div>
                 </div>
-                {visibleCount < filtered.length && (
-                  <div ref={loadMoreRef} className="h-16 w-full" aria-hidden="true" />
-                )}
-              </>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4 }}
-                className="mt-8 rounded-2xl p-12 text-center border border-white/[0.06]"
-                style={{ background: 'rgba(255,255,255,0.02)' }}
-              >
-                <div className="text-white/30 text-lg font-medium mb-2">Nothing here yet</div>
-                <p className="text-white/20 text-sm mb-6">
-                  {query
-                    ? 'No results match your search.'
-                    : 'Add your first item to start tracking.'}
-                </p>
-                <button
-                  onClick={openCreate}
-                  className="glass-btn-primary !py-2.5 !px-6 !text-sm"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Add {mediaType === 'movie' ? 'Movie' : mediaType === 'tv' ? 'TV Show' : 'Anime'}</span>
-                </button>
-              </motion.div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* EXPANDABLE CARD OVERLAY */}
+          <AnimatePresence>
+            {expandedItem && (
+              <ExpandableCardOverlay
+                item={expandedItem}
+                layoutId={`card-${expandedItem.id}`}
+                onClose={() => setExpandedItem(null)}
+                onEdit={() => {
+                  const it = expandedItem;
+                  setExpandedItem(null);
+                  openEdit(it);
+                }}
+                onDelete={() => {
+                  remove(expandedItem.id);
+                  setExpandedItem(null);
+                }}
+                onFav={() => {
+                  toggleFav(expandedItem.id);
+                  setExpandedItem((prev) =>
+                    prev ? { ...prev, favorite: !prev.favorite } : null
+                  );
+                }}
+              />
             )}
-          </motion.div>
-        </AnimatePresence>
+          </AnimatePresence>
+        </LayoutGroup>
       </div>
 
       {/* ━━━ MODALS ━━━ */}
-      {editOpen && editing && (
-        <EditorModal
-          item={editing}
-          onClose={() => {
-            setEditOpen(false);
-            setEditing(null);
-          }}
-          onChange={(next) => setEditing(next)}
-          onSave={(payload) => {
-            const exists = items.some((x) => x.id === editing.id);
-            upsert(payload, exists ? editing.id : undefined);
-            setEditOpen(false);
-            setEditing(null);
-          }}
-          onDelete={() => {
-            remove(editing.id);
-            setEditOpen(false);
-            setEditing(null);
-          }}
-        />
-      )}
+      {
+        editOpen && editing && (
+          <EditorModal
+            item={editing}
+            onClose={() => {
+              setEditOpen(false);
+              setEditing(null);
+            }}
+            onChange={(next) => setEditing(next)}
+            onSave={(payload) => {
+              const exists = items.some((x) => x.id === editing.id);
+              upsert(payload, exists ? editing.id : undefined);
+              setEditOpen(false);
+              setEditing(null);
+            }}
+            onDelete={() => {
+              remove(editing.id);
+              setEditOpen(false);
+              setEditing(null);
+            }}
+          />
+        )
+      }
 
-      {importOpen && (
-        <ImportModal
-          onClose={() => setImportOpen(false)}
-          onImport={(newItems) => {
-            setItems((prev) => {
-              const map = new Map<string, Item>();
-              for (const p of prev) map.set(`${p.mediaType}::${p.title.toLowerCase()}::${p.year ?? ''}`, p);
-              for (const n of newItems) {
-                const k = `${n.mediaType}::${n.title.toLowerCase()}::${n.year ?? ''}`;
-                if (!map.has(k)) map.set(k, n);
-              }
-              return Array.from(map.values());
-            });
-            startTransition(async () => {
-              await importItemsAction(newItems.map(n => ({
-                title: n.title,
-                mediaType: n.mediaType,
-                status: n.status,
-                favorite: n.favorite,
-                genres: n.genres,
-                notes: n.notes,
-                year: n.year,
-                endYear: n.endYear,
-                running: n.running,
-                coverUrl: n.coverUrl,
-                runtime: n.runtime,
-              })));
-              refreshItems();
-            });
-            setImportOpen(false);
-          }}
-        />
-      )}
-    </div>
+      {
+        importOpen && (
+          <ImportModal
+            onClose={() => setImportOpen(false)}
+            onImport={(newItems) => {
+              setItems((prev) => {
+                const map = new Map<string, Item>();
+                for (const p of prev) map.set(`${p.mediaType}::${p.title.toLowerCase()}::${p.year ?? ''}`, p);
+                for (const n of newItems) {
+                  const k = `${n.mediaType}::${n.title.toLowerCase()}::${n.year ?? ''}`;
+                  if (!map.has(k)) map.set(k, n);
+                }
+                return Array.from(map.values());
+              });
+              startTransition(async () => {
+                await importItemsAction(newItems.map(n => ({
+                  title: n.title,
+                  mediaType: n.mediaType,
+                  status: n.status,
+                  favorite: n.favorite,
+                  genres: n.genres,
+                  notes: n.notes,
+                  year: n.year,
+                  endYear: n.endYear,
+                  running: n.running,
+                  coverUrl: n.coverUrl,
+                  runtime: n.runtime,
+                })));
+                refreshItems();
+              });
+              setImportOpen(false);
+            }}
+          />
+        )
+      }
+    </div >
   );
 }

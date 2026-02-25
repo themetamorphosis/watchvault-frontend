@@ -9,6 +9,7 @@ export type Item = {
   favorite: boolean;
   genres?: string[];
   notes?: string;
+  description?: string;
 
   year?: number;
   endYear?: number;

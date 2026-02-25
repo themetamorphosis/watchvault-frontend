@@ -1,6 +1,5 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import CursorGlow from "@/components/CursorGlow";
 import SessionProvider from "@/components/SessionProvider";
 import { GeistSans } from "geist/font/sans";
 
@@ -16,7 +15,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className={`${GeistSans.className} min-h-screen bg-zinc-950 text-white antialiased`}
       >
         <SessionProvider>
-          <CursorGlow />
           {children}
         </SessionProvider>
       </body>
