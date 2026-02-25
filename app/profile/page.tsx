@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useSession, signOut } from "@/components/SessionProvider";
-import { useActionState } from "react";
+import { useRouter } from "next/navigation";
 import {
     ArrowLeft,
     User,
@@ -16,9 +16,10 @@ import {
     Upload,
 } from "lucide-react";
 import { updateProfile } from "@/app/actions/profile";
+import { API_BASE } from "@/lib/auth";
 
 export default function ProfilePage() {
-    const router = require("next/navigation").useRouter();
+    const router = useRouter();
     const { data: session, update: updateSession, status } = useSession();
     const [error, setError] = useState<string | null>(null);
     const [isPending, setIsPending] = useState(false);
@@ -91,7 +92,7 @@ export default function ProfilePage() {
             const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]*)/);
             const token = match ? match[1] : "";
 
-            const res = await fetch("http://127.0.0.1:8000/api/v1/upload", {
+            const res = await fetch(`${API_BASE}/upload`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData,

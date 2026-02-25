@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import type { Item, MediaType } from "@/lib/types";
 import { getItems, updateMetadata } from "@/app/actions/items";
+import { API_BASE } from "@/lib/auth";
 import { domToPng } from "modern-screenshot";
 
 /* ─── Helpers ─── */
@@ -183,7 +184,15 @@ function RingChart({
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
 
-    let offset = 0;
+    // Pre-calculate offsets to avoid mutating a variable during render
+    const segmentsWithOffset = segments.map((seg, i) => {
+        const pct = seg.value / total;
+        const dashLength = pct * circumference;
+        // The offset for the *current* segment is based on the sum of all *previous* segments
+        const previousPctSum = segments.slice(0, i).reduce((sum, s) => sum + (s.value / total), 0);
+        const dashOffset = -previousPctSum * circumference;
+        return { ...seg, pct, dashLength, dashOffset };
+    });
 
     return (
         <div ref={ref} className="relative" style={{ width: size, height: size }}>
@@ -198,12 +207,7 @@ function RingChart({
                     strokeWidth={strokeWidth}
                 />
                 {/* Segments */}
-                {segments.map((seg, i) => {
-                    const pct = seg.value / total;
-                    const dashLength = pct * circumference;
-                    const dashOffset = -offset * circumference;
-                    offset += pct;
-
+                {segmentsWithOffset.map((seg, i) => {
                     return (
                         <motion.circle
                             key={i}
@@ -214,8 +218,8 @@ function RingChart({
                             stroke={seg.color}
                             strokeWidth={strokeWidth}
                             strokeLinecap="round"
-                            strokeDasharray={`${dashLength} ${circumference - dashLength}`}
-                            strokeDashoffset={dashOffset}
+                            strokeDasharray={`${seg.dashLength} ${circumference - seg.dashLength}`}
+                            strokeDashoffset={seg.dashOffset}
                             initial={{ opacity: 0 }}
                             animate={inView ? { opacity: 1 } : {}}
                             transition={{ duration: 0.8, delay: 0.3 + i * 0.15 }}
@@ -372,6 +376,7 @@ function UserAvatarMenu() {
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setImageError(false);
     }, [session?.user?.image]);
 
@@ -498,7 +503,7 @@ export default function DashboardPage() {
                     params.set("title", it.title);
                     params.set("type", it.mediaType);
                     if (it.year) params.set("year", String(it.year));
-                    const r = await fetch(`http://127.0.0.1:8000/api/v1/media/runtime?${params.toString()}`);
+                    const r = await fetch(`${API_BASE}/media/runtime?${params.toString()}`);
                     if (!r.ok) return { id: it.id, runtime: null };
                     const data = await r.json();
                     return { id: it.id, runtime: data.runtime as number | null };
@@ -602,7 +607,7 @@ export default function DashboardPage() {
             const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]*)/);
             const token = match ? match[1] : "";
 
-            const uploadRes = await fetch("http://127.0.0.1:8000/api/v1/snapshots", {
+            const uploadRes = await fetch(`${API_BASE}/snapshots`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData,

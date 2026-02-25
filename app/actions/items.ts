@@ -46,11 +46,14 @@ export async function getItems() {
     });
     if (!res.ok) return [];
     const items = await res.json();
-    return items.map((i: any) => ({
-        ...i,
-        createdAt: new Date(i.createdAt).getTime(),
-        updatedAt: new Date(i.updatedAt).getTime(),
-    }));
+    return items.map((i: unknown) => {
+        const item = i as { createdAt: string | number, updatedAt: string | number } & Record<string, unknown>;
+        return {
+            ...item,
+            createdAt: new Date(item.createdAt).getTime(),
+            updatedAt: new Date(item.updatedAt).getTime(),
+        };
+    });
 }
 
 export async function upsertItem(data: ItemInput) {
@@ -94,7 +97,7 @@ export async function toggleFavorite(id: string) {
     const listRes = await fetch(`${API_BASE}/watchlist`, { headers, cache: "no-store" });
     if (!listRes.ok) return { error: "Item not found" };
     const items = await listRes.json();
-    const item = items.find((i: any) => i.id === id);
+    const item = items.find((i: unknown) => (i as { id: string }).id === id) as { favorite: boolean } | undefined;
     if (!item) return { error: "Item not found" };
 
     const res = await fetch(`${API_BASE}/watchlist/${id}`, {
