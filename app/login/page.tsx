@@ -29,6 +29,8 @@ export default function LoginPage() {
             setError(res.error);
             setIsPending(false);
         } else if (res?.success) {
+            await update();
+            router.refresh();
             router.push("/dashboard");
         }
     };
