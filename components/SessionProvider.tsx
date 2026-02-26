@@ -68,10 +68,10 @@ export default function SessionProvider({ children, session: initialSession }: {
         if (!initialSession) {
             update();
         } else {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
+             
             setStatus("authenticated");
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [initialSession]);
 
     return (

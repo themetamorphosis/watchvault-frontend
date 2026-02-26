@@ -85,13 +85,15 @@ function defaultStatusForImport(): Status {
 }
 
 export default function ImportModal({
+  defaultMediaType = "movie",
   onClose,
   onImport,
 }: {
+  defaultMediaType?: MediaType;
   onClose: () => void;
   onImport: (items: Item[]) => void;
 }) {
-  const [tab, setTab] = useState<MediaType>("movie");
+  const [tab] = useState<MediaType>(defaultMediaType);
   const [text, setText] = useState("");
 
   const preview = useMemo(() => {
@@ -157,20 +159,6 @@ export default function ImportModal({
         </div>
 
         <div className="p-4">
-          <div className="mb-3 flex gap-2">
-            {(["movie", "tv", "anime"] as MediaType[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={
-                  "rounded-xl px-3 py-2 text-sm ring-1 ring-white/10 " +
-                  (tab === t ? "bg-white/15" : "bg-white/5 hover:bg-white/10")
-                }
-              >
-                {t === "movie" ? "Movies" : t === "tv" ? "TV" : "Anime"}
-              </button>
-            ))}
-          </div>
 
           <textarea
             value={text}

@@ -81,31 +81,16 @@ export default function EditorModal({
             className="w-full rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10 outline-none focus:ring-2 focus:ring-white/20"
           />
 
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="text"
-              value={item.year ?? ""}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, "");
-                set("year", val ? Number(val) : undefined);
-              }}
-              placeholder="Year"
-              className="w-full rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10 outline-none focus:ring-2 focus:ring-white/20"
-            />
-
-            <GlassSelect
-              value={item.mediaType}
-              onChange={(v) => set("mediaType", v)}
-              options={[
-                { value: "movie", label: "Movie" },
-                { value: "tv", label: "TV" },
-                { value: "anime", label: "Anime" }
-              ]}
-              className="w-full"
-              buttonClassName="w-full justify-between !rounded-xl !px-3 font-normal"
-              minWidth="100%"
-            />
-          </div>
+          <input
+            type="text"
+            value={item.year ?? ""}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "");
+              set("year", val ? Number(val) : undefined);
+            }}
+            placeholder="Year"
+            className="w-full rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10 outline-none focus:ring-2 focus:ring-white/20"
+          />
 
           <input
             value={(item.genres ?? []).join(", ")}
@@ -140,13 +125,6 @@ export default function EditorModal({
               className="w-full rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10 outline-none focus:ring-2 focus:ring-white/20"
             />
           </div>
-
-          <textarea
-            value={item.notes ?? ""}
-            onChange={(e) => set("notes", e.target.value)}
-            placeholder="Notes (optional)"
-            className="h-24 w-full rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10 outline-none focus:ring-2 focus:ring-white/20"
-          />
         </div>
 
         <div className="p-5 border-t border-white/10 flex items-center justify-between">

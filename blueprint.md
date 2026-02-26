@@ -1,19 +1,14 @@
 # Project Blueprint
 
 ## Overview
-This blueprint tracks the ongoing development of the application. The current goal is to update the git repository by committing uncommitted changes and pushing them to the remote repository.
+This blueprint tracks the ongoing development of the application. The current goal is to refine the UI/UX by implementing a professional, industry-grade button overhaul across all Media Library components. This involves replacing hidden interaction menus (e.g. kebab menus) with sleek, single-click glassmorphic action buttons for increased accessibility and an Apple/Linear aesthetic.
 
 ## Current State & Existing Features
 The application is a Next.js project using App Router, with integration for Firebase Studio, Prisma for database access, and other configurations.
-Currently, there are various untracked and modified files, including database configurations, components, and output logs.
+The media library uses `LibraryPage`, `MediaCard`, and `ExpandableCardOverlay` to view, search, and manage a user's movie, tv, and anime catalog.
 
-## Current Task: Update Git Repository
-1. Review the currently untracked and modified files (`.gitignore`, `dev_log.txt`, `prisma/`, `lib/db.ts`, etc.).
-2. Stage all intended changes.
-3. Commit these changes with an appropriate commit message.
-4. Push the commit to the `main` branch on the remote repository to "update the version".
-
-**Questions for the User:**
-- Do you want all the currently modified and untracked files (e.g., `dev_log.txt`, `prisma/`, `lib/db.ts`) to be included in this commit?
-- What would you like the commit message to be? (e.g., "feat: add database configuration and prisma integration")
-- Are there any files you want to ignore?
+## Current Task: Redesign Media Library Buttons
+1. Refactor `MediaCard.tsx` to remove the dropdown menu, replacing it with an elegant hover-revealed action strip (Favorite, Edit, Delete).
+2. Refactor `ExpandableCardOverlay.tsx` to replace its dropdown menu with an always-visible top-right action strip (Edit, Delete, Close).
+3. Refactor `LibraryPage.tsx` top toolbar buttons to have a unified layout, consistent padding, and premium glassmorphism styling.
+4. Verify styles and clean up unused states in these components.

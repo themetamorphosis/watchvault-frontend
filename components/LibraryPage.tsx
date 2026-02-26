@@ -24,7 +24,9 @@ import {
   SlidersHorizontal,
   X,
   LayoutDashboard,
+  ChevronDown,
 } from 'lucide-react';
+import { useOutsideClick } from '@/hooks/use-outside-click';
 
 /* ─── Types ─── */
 type SelectOption<T extends string> = { value: T; label: string };
@@ -182,6 +184,12 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
   const [editing, setEditing] = useState<Item | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [expandedItem, setExpandedItem] = useState<Item | null>(null);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const addMenuRef = useRef<HTMLDivElement>(null);
+
+  useOutsideClick(addMenuRef, () => {
+    if (addMenuOpen) setAddMenuOpen(false);
+  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const layoutGroupId = React.useId();
@@ -226,7 +234,7 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
     }).catch(() => {
       setReady((prev) => prev || true);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [userId]);
 
   // 3. Keep cache strictly in sync with local optimistic changes
@@ -332,7 +340,7 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
     // Find items that need metadata and aren't being synced yet
     const missing = renderItems.filter((it) => {
       if (syncingRefs.current.has(it.id)) return false;
-      if (it.coverUrl && it.genres && it.genres.length > 0) return false;
+      if (it.coverUrl && it.genres && it.genres.length > 0 && it.description) return false;
       try { if (sessionStorage.getItem(`wv-poster-skip-${it.id}`)) return false; } catch { }
       return true;
     });
@@ -463,46 +471,70 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
-              {/* Search toggle */}
-              <button
-                onClick={() => setSearchOpen((v) => !v)}
-                className="liquid-glass liquid-glass-round liquid-glass-hover liquid-glass-press flex items-center justify-center h-9 w-9"
-                title="Search"
-              >
-                {searchOpen ? (
-                  <X className="h-4 w-4 text-white/70" />
-                ) : (
-                  <Search className="h-4 w-4 text-white/70" />
-                )}
-              </button>
+              {/* View & Search Controls */}
+              <div className="flex items-center gap-1 bg-white/[0.03] border border-white/5 rounded-full p-1 shadow-sm backdrop-blur-md">
+                {/* Search toggle */}
+                <button
+                  onClick={() => setSearchOpen((v) => !v)}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${searchOpen ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                  title="Search"
+                >
+                  {searchOpen ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
+                </button>
 
-              {/* Filter toggle */}
-              <button
-                onClick={() => setFiltersOpen((v) => !v)}
-                className={`liquid-glass liquid-glass-round liquid-glass-hover liquid-glass-press flex items-center justify-center h-9 w-9 transition-all duration-200 ${filtersOpen ? '!bg-white/[0.12] !border-white/[0.18]' : ''
-                  }`}
-                title="Filters"
-              >
-                <SlidersHorizontal className="h-4 w-4 text-white/70" />
-              </button>
+                {/* Filter toggle */}
+                <button
+                  onClick={() => setFiltersOpen((v) => !v)}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${filtersOpen ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                  title="Filters"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                </button>
+              </div>
 
-              {/* Import */}
-              <button
-                onClick={() => setImportOpen(true)}
-                className="liquid-glass liquid-glass-round liquid-glass-hover liquid-glass-press flex items-center justify-center h-9 w-9"
-                title="Import"
-              >
-                <Download className="h-4 w-4 text-white/70" />
-              </button>
+              {/* Add & Import Actions (Split Dropdown) */}
+              <div className="relative z-50 ml-1 flex items-center" ref={addMenuRef}>
+                <div className="flex bg-white text-black rounded-full shadow-[0_0_15px_rgba(255,255,255,0.15)] hover:shadow-[0_0_20px_rgba(255,255,255,0.25)] ring-1 ring-white/20 transition-all duration-300">
+                  <button
+                    onClick={openCreate}
+                    className="flex items-center gap-1.5 h-9 pl-4 pr-3 font-semibold text-sm hover:bg-black/5 active:bg-black/10 transition-colors rounded-l-full"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>New Title</span>
+                  </button>
+                  <div className="w-px h-5 bg-black/10 my-auto" />
+                  <button
+                    onClick={() => setAddMenuOpen((v) => !v)}
+                    className="flex items-center justify-center h-9 px-2 rounded-r-full hover:bg-black/5 active:bg-black/10 transition-colors"
+                    aria-label="More options"
+                  >
+                    <ChevronDown className="h-4 w-4 text-black/70" />
+                  </button>
+                </div>
 
-              {/* Add */}
-              <button
-                onClick={openCreate}
-                className="glass-btn-primary !py-2 !px-4 !text-sm !rounded-xl"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Add</span>
-              </button>
+                <AnimatePresence>
+                  {addMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                      className="absolute right-0 top-full mt-2 w-48 bg-[#151515] border border-white/10 rounded-2xl shadow-2xl p-1.5 origin-top-right overflow-hidden z-[100]"
+                    >
+                      <button
+                        onClick={() => {
+                          setAddMenuOpen(false);
+                          setImportOpen(true);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[14px] font-medium text-white/80 rounded-xl hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <Download className="h-4 w-4" />
+                        Import Data
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
 
@@ -757,6 +789,7 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
       {
         importOpen && (
           <ImportModal
+            defaultMediaType={mediaType}
             onClose={() => setImportOpen(false)}
             onImport={(newItems) => {
               setItems((prev) => {

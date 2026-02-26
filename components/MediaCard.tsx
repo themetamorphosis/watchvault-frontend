@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import type { Item, Status } from "@/lib/types";
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Star } from "lucide-react";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 
 function statusText(s: Status) {
@@ -42,13 +42,8 @@ export default function MediaCard({
 }) {
   const [attempted, setAttempted] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
   const glowRaf = useRef<number | null>(null);
-
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
-  useOutsideClick(menuRef, closeMenu);
 
   // reset if url changes
   useEffect(() => {
@@ -65,23 +60,15 @@ export default function MediaCard({
     onFav();
   }
 
-  function handleMenuToggle(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    setMenuOpen((v) => !v);
-  }
-
   function handleMenuEdit(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    setMenuOpen(false);
     onEdit();
   }
 
   function handleMenuDelete(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    setMenuOpen(false);
     onDelete();
   }
 
@@ -135,54 +122,56 @@ export default function MediaCard({
           )}
         </motion.div>
 
-        {/* 3-dot kebab menu */}
-        <div className="absolute top-2 right-2 z-20">
+        {/* Floating Actions Strip on Desktop Hover / Always on Touch */}
+        <div className="absolute top-2 right-2 z-20 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-1 group-hover:translate-x-0">
           <motion.button
-            onClick={handleMenuToggle}
-            initial={{ opacity: 0 }}
+            onClick={handleFavActivate}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             className={`
               flex h-8 w-8 items-center justify-center rounded-full
               bg-black/50 ring-1 ring-white/15 backdrop-blur-xl
-              hover:bg-black/70 hover:ring-white/25
+              hover:bg-black/70 hover:ring-white/30
               transition-all duration-200
-              ${menuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
+              ${item.favorite ? '!ring-yellow-400/50 shadow-[0_0_12px_rgba(250,204,21,0.25)]' : ''}
             `}
-            aria-label="More options"
+            aria-label={item.favorite ? "Unmark favorite" : "Mark favorite"}
+            title="Favorite"
           >
-            <MoreVertical className="h-4 w-4 text-white/80" />
+            <Star className={`h-4 w-4 ${item.favorite ? 'fill-yellow-400 text-yellow-400' : 'text-white/70'}`} />
           </motion.button>
 
-          {/* Dropdown */}
-          <AnimatePresence>
-            {menuOpen && (
-              <motion.div
-                ref={menuRef}
-                initial={{ opacity: 0, y: -6, scale: 0.92 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -6, scale: 0.92 }}
-                transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute right-0 top-10 z-30 w-36 overflow-hidden rounded-xl bg-zinc-900/95 ring-1 ring-white/12 shadow-2xl backdrop-blur-2xl"
-              >
-                <button
-                  onClick={handleMenuEdit}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm font-medium text-white/75 hover:bg-white/[0.08] hover:text-white transition-colors"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Edit
-                </button>
-                <div className="mx-2 h-px bg-white/[0.08]" />
-                <button
-                  onClick={handleMenuDelete}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Delete
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <motion.button
+            onClick={handleMenuEdit}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="
+              flex h-8 w-8 items-center justify-center rounded-full
+              bg-black/50 ring-1 ring-white/15 backdrop-blur-xl
+              hover:bg-black/70 hover:ring-white/30
+              transition-all duration-200
+            "
+            aria-label="Edit title"
+            title="Edit"
+          >
+            <Pencil className="h-3.5 w-3.5 text-white/70" />
+          </motion.button>
+
+          <motion.button
+            onClick={handleMenuDelete}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="
+              flex h-8 w-8 items-center justify-center rounded-full
+              bg-black/50 ring-1 ring-white/15 backdrop-blur-xl
+              hover:bg-red-500/20 hover:ring-red-500/40
+              transition-all duration-200 group/del
+            "
+            aria-label="Delete title"
+            title="Delete"
+          >
+            <Trash2 className="h-3.5 w-3.5 text-white/70 group-hover/del:text-red-400" />
+          </motion.button>
         </div>
 
         {/* Premium light sweep */}
@@ -206,22 +195,7 @@ export default function MediaCard({
               <div className="mt-0.5 truncate text-xs text-white/70">{meta || " "}</div>
             </div>
 
-            {/* Favorite control */}
-            <motion.div
-              role="button"
-              tabIndex={0}
-              aria-label={item.favorite ? "Remove favorite" : "Mark favorite"}
-              onClick={handleFavActivate}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") handleFavActivate(e);
-              }}
-              whileHover={{ scale: 1.06 }}
-              whileTap={{ scale: 0.96 }}
-              className="pointer-events-auto rounded-xl bg-white/10 px-2.5 py-1.5 text-xs ring-1 ring-white/10 hover:bg-white/15 outline-none"
-              title="Favorite"
-            >
-              {item.favorite ? "★" : "☆"}
-            </motion.div>
+            <div />
           </div>
 
           <div className="mt-2 inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-white/80 ring-1 ring-white/10">
