@@ -6,16 +6,19 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, UserPlus, AlertCircle } from "lucide-react";
 import { register } from "@/app/actions/auth";
+import { useSession } from "@/components/SessionProvider";
 
 export default function RegisterPage() {
     const router = useRouter();
+    const { update } = useSession();
     const [error, setError] = useState<string | null>(null);
     const [isPending, setIsPending] = useState(false);
 
     useEffect(() => {
         // Clear auth token when visiting register page
-        document.cookie = "auth_token=; max-age=0; path=/; samesite=lax";
-    }, []);
+        document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax";
+        update();
+    }, [update]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
