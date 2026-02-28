@@ -1,5 +1,6 @@
 import type { MediaType } from "@/lib/types";
-import { API_BASE } from "@/lib/auth";
+
+import { fetchApi } from "@/lib/apiClient";
 
 export async function fetchPoster(title: string, mediaType: MediaType, year?: number) {
   const params = new URLSearchParams();
@@ -7,7 +8,7 @@ export async function fetchPoster(title: string, mediaType: MediaType, year?: nu
   params.set("type", mediaType);
   if (year) params.set("year", String(year));
 
-  const r = await fetch(`${API_BASE}/media/poster?${params.toString()}`);
+  const r = await fetchApi(`/media/poster?${params.toString()}`);
   if (!r.ok) return null;
 
   const data = (await r.json()) as { coverUrl: string | null; genres: string[]; description: string | null };

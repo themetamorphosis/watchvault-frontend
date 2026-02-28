@@ -31,7 +31,14 @@ export default function LoginPage() {
         } else if (res?.success) {
             await update();
             router.refresh();
-            router.push("/dashboard");
+
+            const params = new URLSearchParams(window.location.search);
+            const callbackUrl = params.get("callbackUrl");
+            if (callbackUrl && callbackUrl.startsWith("/")) {
+                router.push(callbackUrl);
+            } else {
+                router.push("/dashboard");
+            }
         }
     };
 

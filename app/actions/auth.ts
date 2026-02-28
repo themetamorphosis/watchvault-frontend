@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/auth";
+import { fetchApi } from "@/lib/apiClient";
 
 export async function login(prevState: unknown, formData: FormData) {
     const email = formData.get("email") as string;
@@ -13,7 +13,7 @@ export async function login(prevState: unknown, formData: FormData) {
         params.append("username", email);
         params.append("password", password);
 
-        const res = await fetch(`${API_BASE}/auth/login`, {
+        const res = await fetchApi(`/auth/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
@@ -61,11 +61,8 @@ export async function register(prevState: unknown, formData: FormData): Promise<
     }
 
     try {
-        const res = await fetch(`${API_BASE}/auth/register`, {
+        const res = await fetchApi(`/auth/register`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
             body: JSON.stringify({ name, email, password }),
         });
 

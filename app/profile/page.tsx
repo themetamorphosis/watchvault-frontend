@@ -16,7 +16,7 @@ import {
     Upload,
 } from "lucide-react";
 import { updateProfile } from "@/app/actions/profile";
-import { API_BASE } from "@/lib/auth";
+import { fetchApi } from "@/lib/apiClient";
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -89,12 +89,8 @@ export default function ProfilePage() {
             const formData = new FormData();
             formData.append("file", file);
 
-            const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]*)/);
-            const token = match ? match[1] : "";
-
-            const res = await fetch(`${API_BASE}/upload`, {
+            const res = await fetchApi(`/upload`, {
                 method: "POST",
-                headers: { "Authorization": `Bearer ${token}` },
                 body: formData,
             });
 

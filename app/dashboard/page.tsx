@@ -29,7 +29,8 @@ import {
 } from "lucide-react";
 import type { Item, MediaType } from "@/lib/types";
 import { getItems, updateMetadata } from "@/app/actions/items";
-import { API_BASE } from "@/lib/auth";
+
+import { fetchApi } from "@/lib/apiClient";
 import { domToPng } from "modern-screenshot";
 
 /* ─── Helpers ─── */
@@ -502,8 +503,8 @@ export default function DashboardPage() {
                     const params = new URLSearchParams();
                     params.set("title", it.title);
                     params.set("type", it.mediaType);
-                    if (it.year) params.set("year", String(it.year));
-                    const r = await fetch(`${API_BASE}/media/runtime?${params.toString()}`);
+                    if (it.year) params.set("year", it.year.toString());
+                    const r = await fetchApi(`/media/runtime?${params.toString()}`);
                     if (!r.ok) return { id: it.id, runtime: null };
                     const data = await r.json();
                     return { id: it.id, runtime: data.runtime as number | null };
@@ -604,12 +605,8 @@ export default function DashboardPage() {
             const formData = new FormData();
             formData.append("file", file);
 
-            const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]*)/);
-            const token = match ? match[1] : "";
-
-            const uploadRes = await fetch(`${API_BASE}/snapshots`, {
+            const uploadRes = await fetchApi(`/snapshots`, {
                 method: "POST",
-                headers: { "Authorization": `Bearer ${token}` },
                 body: formData,
             });
 
