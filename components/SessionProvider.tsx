@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { API_BASE } from "@/lib/auth";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+
+import { fetchApi } from "@/lib/apiClient";
 
 export type User = {
     id: string;
@@ -28,7 +29,7 @@ export default function SessionProvider({ children, session: initialSession }: {
         initialSession ? "authenticated" : "loading"
     );
 
-    const update = async () => {
+    const update = useCallback(async () => {
         try {
             const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]*)/);
             const token = match ? match[1] : null;
@@ -39,9 +40,8 @@ export default function SessionProvider({ children, session: initialSession }: {
                 return;
             }
 
-            const res = await fetch(`${API_BASE}/auth/me`, {
-                headers: { "Authorization": `Bearer ${token}` },
-                cache: "no-store"
+            const res = await fetchApi(`/auth/me`, {
+                cache: "no-store",
             });
 
             if (res.ok) {
@@ -61,18 +61,15 @@ export default function SessionProvider({ children, session: initialSession }: {
             setSession(null);
             setStatus("unauthenticated");
         }
-    };
+    }, []);
 
     useEffect(() => {
         // We let the Server Component pass down the initial session, so we don't refetch on mount if it's there
         if (!initialSession) {
             update();
-        } else {
-             
-            setStatus("authenticated");
         }
-         
-    }, [initialSession]);
+    }, [initialSession, update]);
+
 
     return (
         <SessionContext.Provider value={{ data: session, status, update }}>
@@ -89,9 +86,4 @@ export function useSession() {
     return context;
 }
 
-export async function signOut({ callbackUrl }: { callbackUrl?: string } = {}) {
-    document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax";
-    setTimeout(() => {
-        window.location.href = callbackUrl || "/";
-    }, 100);
-}
+export { signOut } from "@/lib/auth";

@@ -1,5 +1,4 @@
-import { API_BASE } from "@/lib/auth";
-
+import { fetchApi } from "@/lib/apiClient";
 export async function updateProfile(prevState: unknown, formData: FormData) {
     const name = (formData.get("name") as string)?.trim();
     const image = (formData.get("image") as string)?.trim();
@@ -34,12 +33,8 @@ export async function updateProfile(prevState: unknown, formData: FormData) {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/auth/me`, {
+        const res = await fetchApi(`/auth/me`, {
             method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
             body: JSON.stringify({ name, image: parsedImage || null }),
         });
 

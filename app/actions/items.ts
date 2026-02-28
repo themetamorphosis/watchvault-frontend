@@ -1,5 +1,6 @@
-import { API_BASE } from "@/lib/auth";
+
 import type { MediaType, Status } from "@/lib/types";
+import { fetchApi } from "@/lib/apiClient";
 
 type ItemInput = {
     id?: string;
@@ -17,21 +18,8 @@ type ItemInput = {
     runtime?: number;
 };
 
-// Client-side header generation
-export function getAuthHeaders() {
-    const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]*)/);
-    const token = match ? match[1] : null;
-    if (!token) throw new Error("Unauthorized");
-    return {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-    };
-}
-
 export async function getUserId(): Promise<string> {
-    const headers = getAuthHeaders();
-    const res = await fetch(`${API_BASE}/auth/me`, {
-        headers,
+    const res = await fetchApi(`/auth/me`, {
         cache: "no-store",
     });
     if (!res.ok) throw new Error("Unauthorized");
@@ -40,9 +28,7 @@ export async function getUserId(): Promise<string> {
 }
 
 export async function getItems() {
-    const headers = getAuthHeaders();
-    const res = await fetch(`${API_BASE}/watchlist`, {
-        headers,
+    const res = await fetchApi(`/watchlist`, {
         cache: "no-store",
     });
     if (!res.ok) return [];
@@ -58,19 +44,16 @@ export async function getItems() {
 }
 
 export async function upsertItem(data: ItemInput) {
-    const headers = getAuthHeaders();
     let res;
 
     if (data.id) {
-        res = await fetch(`${API_BASE}/watchlist/${data.id}`, {
+        res = await fetchApi(`/watchlist/${data.id}`, {
             method: "PATCH",
-            headers,
             body: JSON.stringify(data),
         });
     } else {
-        res = await fetch(`${API_BASE}/watchlist`, {
+        res = await fetchApi(`/watchlist`, {
             method: "POST",
-            headers,
             body: JSON.stringify(data),
         });
     }
@@ -82,10 +65,8 @@ export async function upsertItem(data: ItemInput) {
 }
 
 export async function deleteItem(id: string) {
-    const headers = getAuthHeaders();
-    const res = await fetch(`${API_BASE}/watchlist/${id}`, {
+    const res = await fetchApi(`/watchlist/${id}`, {
         method: "DELETE",
-        headers,
     });
     if (res.ok) {
         return { success: true };
@@ -94,16 +75,14 @@ export async function deleteItem(id: string) {
 }
 
 export async function toggleFavorite(id: string) {
-    const headers = getAuthHeaders();
-    const listRes = await fetch(`${API_BASE}/watchlist`, { headers, cache: "no-store" });
+    const listRes = await fetchApi(`/watchlist`, { cache: "no-store" });
     if (!listRes.ok) return { error: "Item not found" };
     const items = await listRes.json();
     const item = items.find((i: unknown) => (i as { id: string }).id === id) as { favorite: boolean } | undefined;
     if (!item) return { error: "Item not found" };
 
-    const res = await fetch(`${API_BASE}/watchlist/${id}`, {
+    const res = await fetchApi(`/watchlist/${id}`, {
         method: "PATCH",
-        headers,
         body: JSON.stringify({ favorite: !item.favorite }),
     });
 
@@ -114,10 +93,8 @@ export async function toggleFavorite(id: string) {
 }
 
 export async function updateMetadata(id: string, payload: { coverUrl?: string; genres?: string[]; description?: string; runtime?: number }) {
-    const headers = getAuthHeaders();
-    const res = await fetch(`${API_BASE}/watchlist/${id}`, {
+    const res = await fetchApi(`/watchlist/${id}`, {
         method: "PATCH",
-        headers,
         body: JSON.stringify(payload),
     });
     if (res.ok) {
@@ -127,14 +104,11 @@ export async function updateMetadata(id: string, payload: { coverUrl?: string; g
 }
 
 export async function importItems(items: ItemInput[]) {
-    const headers = getAuthHeaders();
-
     let imported = 0;
     for (const item of items) {
         try {
-            const res = await fetch(`${API_BASE}/watchlist`, {
+            const res = await fetchApi(`/watchlist`, {
                 method: "POST",
-                headers,
                 body: JSON.stringify(item),
             });
             if (res.ok) imported++;
@@ -145,3 +119,4 @@ export async function importItems(items: ItemInput[]) {
 
     return { success: true, imported };
 }
+
