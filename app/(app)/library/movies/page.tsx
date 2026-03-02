@@ -1,5 +1,5 @@
 import LibraryPage from "@/components/LibraryPage";
 
 export default function MoviesPage() {
-  return <LibraryPage mediaType="movie" title="Movies" />;
+    return <LibraryPage mediaType="movie" title="Movies" />;
 }

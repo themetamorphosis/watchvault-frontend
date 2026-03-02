@@ -27,6 +27,8 @@ import {
   X,
   LayoutDashboard,
   ChevronDown,
+  PanelLeftClose,
+  PanelLeft,
 } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
 
@@ -147,9 +149,9 @@ function GlassSelect<T extends string>({
 /* ─── Nav links data ─── */
 const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, accent: '#A855F7' },
-  { href: '/movies', label: 'Movies', icon: Film, accent: '#FF3864' },
-  { href: '/tv', label: 'TV Shows', icon: Tv, accent: '#A855F7' },
-  { href: '/anime', label: 'Anime', icon: Sparkles, accent: '#38BDF8' },
+  { href: '/library/movies', label: 'Movies', icon: Film, accent: '#FF3864' },
+  { href: '/library/tv', label: 'TV Shows', icon: Tv, accent: '#A855F7' },
+  { href: '/library/anime', label: 'Anime', icon: Sparkles, accent: '#38BDF8' },
 ];
 
 /* ─── Status tabs ─── */
@@ -187,6 +189,7 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
   const [importOpen, setImportOpen] = useState(false);
   const [expandedItem, setExpandedItem] = useState<Item | null>(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const addMenuRef = useRef<HTMLDivElement>(null);
 
   useOutsideClick(addMenuRef, () => {
@@ -447,10 +450,36 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
   }, []);
 
   /* ── Current accent color from nav link ── */
-  const currentAccent = NAV_LINKS.find((l) => l.href === `/${mediaType === 'movie' ? 'movies' : mediaType === 'tv' ? 'tv' : 'anime'}`)?.accent ?? '#FF3864';
+  const currentAccent = NAV_LINKS.find((l) => l.href === `/library/${mediaType === 'movie' ? 'movies' : mediaType === 'tv' ? 'tv' : 'anime'}`)?.accent ?? '#FF3864';
+
+  /* ── Collect unique genres from current page items ── */
+  const allGenres = useMemo(() => {
+    const s = new Set<string>();
+    for (const it of pageItems) {
+      for (const g of it.genres ?? []) s.add(g);
+    }
+    return Array.from(s).sort();
+  }, [pageItems]);
+
+  const [genreFilter, setGenreFilter] = useState<string | null>(null);
+
+  /* Override filtered to additionally apply genre */
+  const filteredWithGenre = useMemo(() => {
+    if (!genreFilter) return filtered;
+    return filtered.filter((it) => (it.genres ?? []).includes(genreFilter));
+  }, [filtered, genreFilter]);
+
+  const renderItemsFinal = useMemo(() => filteredWithGenre.slice(0, visibleCount), [filteredWithGenre, visibleCount]);
+
+  /* ── Sub-tab nav data ── */
+  const SUB_TABS = [
+    { href: '/library/movies', label: 'Movies', icon: Film },
+    { href: '/library/tv', label: 'TV Shows', icon: Tv },
+    { href: '/library/anime', label: 'Anime', icon: Sparkles },
+  ];
 
   return (
-    <div className="min-h-screen w-full bg-[#050505] text-white">
+    <div className="w-full text-white">
       {/* Top gradient ambiance */}
       <div className="pointer-events-none fixed inset-x-0 top-0 h-56 z-0"
         style={{
@@ -458,95 +487,175 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
         }}
       />
 
-      <div className="sticky top-0 z-40 border-b border-white/[0.06]"
-        style={{ background: 'rgba(5, 5, 5, 0.75)', backdropFilter: 'blur(20px) saturate(160%)' }}
+      {/* ── Sub-Tabs: Movies | TV Shows | Anime ── */}
+      <div className="sticky top-[64px] z-40 border-b border-white/[0.06]"
+        style={{ background: 'rgba(5, 5, 5, 0.72)', backdropFilter: 'blur(20px) saturate(160%)' }}
       >
-        <div className="mx-auto w-full max-w-[1600px] px-6 lg:px-10">
-          {/* Top row: logo + nav + actions */}
-          <div className="relative flex items-center justify-center py-4">
-            {/* Left: Back + Logo (absolute left) */}
-            <div className="absolute left-0 flex items-center gap-4">
-              <Link
-                href="/dashboard"
-                className="liquid-glass liquid-glass-round liquid-glass-hover liquid-glass-press flex items-center justify-center h-9 w-9"
-                title="Go to dashboard"
-              >
-                <ArrowLeft className="h-4 w-4 text-white/70" />
-              </Link>
-              <Link
-                href="/"
-                className="text-lg font-semibold tracking-tight text-white/90 hover:text-white transition-colors duration-200"
-              >
-                WatchVault
-              </Link>
+        <div className="mx-auto max-w-[1440px] px-6 lg:px-10">
+          <div className="flex items-center gap-1 h-12">
+            <LayoutGroup id="sub-tabs">
+              {SUB_TABS.map((tab) => {
+                const isActive = pathname?.startsWith(tab.href);
+                return (
+                  <Link
+                    key={tab.href}
+                    href={tab.href}
+                    className={`relative flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium tracking-tight transition-colors duration-200 select-none ${isActive ? 'text-white' : 'text-white/40 hover:text-white/65'
+                      }`}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="sub-tab-pill"
+                        className="absolute inset-0 rounded-xl"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.07)',
+                          border: '1px solid rgba(255, 255, 255, 0.10)',
+                        }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-2">
+                      <tab.icon className="h-4 w-4" />
+                      {tab.label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </LayoutGroup>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main Body: Sidebar + Content ── */}
+      <div className="relative z-10 mx-auto max-w-[1440px] flex">
+        {/* ─ LEFT SIDEBAR ─ */}
+        <aside
+          className="hidden lg:flex flex-col flex-shrink-0 border-r border-white/[0.05] sticky top-[112px] self-start h-[calc(100vh-112px)] overflow-hidden transition-all duration-300 ease-in-out"
+          style={{ width: sidebarOpen ? 260 : 48, minWidth: sidebarOpen ? 260 : 48 }}
+        >
+          {/* Toggle button */}
+          <button
+            onClick={() => setSidebarOpen((v) => !v)}
+            className="flex items-center justify-center h-10 w-full hover:bg-white/[0.04] transition-colors flex-shrink-0 mt-2"
+            aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+            title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          >
+            {sidebarOpen ? (
+              <PanelLeftClose className="h-4 w-4 text-white/40 hover:text-white/70 transition-colors" />
+            ) : (
+              <PanelLeft className="h-4 w-4 text-white/40 hover:text-white/70 transition-colors" />
+            )}
+          </button>
+
+          {/* Sidebar content — hidden when collapsed */}
+          <div
+            className={`flex-1 overflow-y-auto scrollbar-hide px-5 py-4 transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
+          >
+            {/* Status filters */}
+            <div className="mb-8">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-3 px-2">Status</h3>
+              <div className="space-y-0.5">
+                {STATUS_TABS.map((tab) => {
+                  const isActive = status === tab.value;
+                  const count = statusCounts[tab.value] ?? 0;
+                  return (
+                    <button
+                      key={tab.value}
+                      onClick={() => setStatus(tab.value)}
+                      className={`w-full flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-[13px] font-medium tracking-tight transition-all duration-200 ${isActive
+                        ? 'bg-white/[0.08] text-white border border-white/[0.08]'
+                        : 'text-white/50 hover:text-white/70 hover:bg-white/[0.03] border border-transparent'
+                        }`}
+                    >
+                      <span>{tab.label}</span>
+                      <span className={`text-xs tabular-nums ${isActive ? 'text-white/50' : 'text-white/25'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Center: Category pill nav (Raycast-style) */}
-            <LayoutGroup>
-              <div className="hidden md:flex liquid-glass liquid-glass-pill px-1.5 py-1.5">
-                <div className="relative flex items-center gap-0.5">
-                  {NAV_LINKS.map((link) => {
-                    const isActive = pathname?.startsWith(link.href);
-                    return (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className={`relative z-10 flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium tracking-tight transition-colors duration-200 select-none ${isActive ? 'text-white' : 'text-white/50 hover:text-white/75'
-                          }`}
-                      >
-                        {isActive && (
-                          <motion.div
-                            layoutId="lib-nav-pill"
-                            className="absolute inset-0 rounded-full bg-white/[0.12]"
-                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                          />
-                        )}
-                        <span className="relative z-10 flex items-center gap-2">
-                          <link.icon className="h-4 w-4" />
-                          {link.label}
-                        </span>
-                      </Link>
-                    );
-                  })}
+            {/* Favorites */}
+            <div className="mb-8">
+              <button
+                onClick={() => setOnlyFav((v) => !v)}
+                className={`w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium tracking-tight transition-all duration-200 border ${onlyFav
+                  ? 'bg-yellow-500/10 text-yellow-300 border-yellow-500/20'
+                  : 'text-white/50 hover:text-white/70 hover:bg-white/[0.03] border-transparent'
+                  }`}
+              >
+                <Star className={`h-4 w-4 ${onlyFav ? 'text-yellow-400 fill-yellow-400' : 'text-white/40'}`} />
+                Favorites Only
+              </button>
+            </div>
+
+            {/* Sort */}
+            <div className="mb-8">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-3 px-2">Sort By</h3>
+              <GlassSelect value={sort} onChange={setSort} options={SORT_OPTIONS} minWidth={200} className="w-full" />
+            </div>
+
+            {/* Genres */}
+            {allGenres.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-3 px-2">Genres</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {allGenres.map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => setGenreFilter(genreFilter === g ? null : g)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border ${genreFilter === g
+                        ? 'bg-white/10 text-white border-white/15'
+                        : 'text-white/40 hover:text-white/60 hover:bg-white/[0.04] border-white/[0.06]'
+                        }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </LayoutGroup>
+            )}
+          </div>
+        </aside>
 
-            {/* Right: Actions (absolute right) */}
-            <div className="absolute right-0 flex items-center gap-2">
-              {/* View & Search Controls */}
-              <div className="flex items-center gap-1 bg-white/[0.03] border border-white/5 rounded-full p-1 shadow-sm backdrop-blur-md">
-                {/* Search toggle */}
-                <button
-                  onClick={() => setSearchOpen((v) => !v)}
-                  className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${searchOpen ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
-                  title="Search"
-                >
-                  {searchOpen ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
-                </button>
-
-                {/* Filter toggle */}
-                <button
-                  onClick={() => setFiltersOpen((v) => !v)}
-                  className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${filtersOpen ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
-                  title="Filters"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                </button>
+        {/* ─ MAIN CONTENT ─ */}
+        <div className="flex-1 min-w-0 px-6 lg:px-10 py-8">
+          {/* Title Row */}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                {title}
+              </h1>
+              <div className="text-sm text-white/35 mt-1 h-5 flex items-center">
+                {!mounted || (!ready && items.length === 0) ? (
+                  <div className="h-4 w-32 bg-white/[0.05] rounded animate-pulse" />
+                ) : (
+                  <>{pageItems.length} {pageItems.length === 1 ? 'title' : 'titles'} in your collection</>
+                )}
               </div>
+            </motion.div>
 
-              {/* Add via TMDB Search + Import Dropdown */}
-              <div className="relative z-50 ml-1 flex items-center gap-2" ref={addMenuRef}>
+            {/* Actions: TMDB search + Import */}
+            <div className="flex items-center gap-2">
+              <div className="relative z-50 flex items-center gap-2" ref={addMenuRef}>
                 <TmdbSearchInput
                   mediaType={mediaType}
                   onSelect={openFromTmdb}
-                  placeholder={`Search ${mediaType === 'movie' ? 'movies' : mediaType === 'tv' ? 'TV shows' : 'anime'}…`}
+                  placeholder={`Add ${mediaType === 'movie' ? 'movie' : mediaType === 'tv' ? 'TV show' : 'anime'}…`}
                 />
 
                 <button
                   onClick={() => setAddMenuOpen((v) => !v)}
-                  className="flex items-center justify-center h-9 w-9 rounded-full bg-white/[0.06] border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/10 transition-all duration-200"
-                  aria-label="More options"
+                  className="flex items-center justify-center h-9 w-9 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200"
+                  aria-label="Import"
+                  title="Import data"
                 >
                   <Download className="h-4 w-4" />
                 </button>
@@ -560,6 +669,16 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
                       transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                       className="absolute right-0 top-full mt-2 w-48 bg-[#151515] border border-white/10 rounded-2xl shadow-2xl p-1.5 origin-top-right overflow-hidden z-[100]"
                     >
+                      <button
+                        onClick={() => {
+                          setAddMenuOpen(false);
+                          openCreate();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[14px] font-medium text-white/80 rounded-xl hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Manually
+                      </button>
                       <button
                         onClick={() => {
                           setAddMenuOpen(false);
@@ -577,227 +696,128 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
             </div>
           </div>
 
-          {/* Mobile nav */}
-          <div className="md:hidden pb-3">
-            <div className="liquid-glass liquid-glass-pill px-1.5 py-1.5">
-              <div className="flex items-center justify-between gap-1">
-                {NAV_LINKS.map((link) => {
-                  const isActive = pathname?.startsWith(link.href);
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className={`flex-1 text-center rounded-full px-3 py-2 text-sm font-medium tracking-tight transition-all duration-200 ${isActive ? 'text-white bg-white/[0.12]' : 'text-white/50 hover:text-white/75'
-                        }`}
-                    >
-                      {link.label}
-                    </Link>
-                  );
-                })}
-              </div>
+          {/* Search bar (always visible) */}
+          <div className="relative mb-6">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/25" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search titles, genres, years..."
+              className="
+                w-full rounded-xl
+                bg-white/[0.03] border border-white/[0.07]
+                pl-11 pr-4 py-3
+                text-sm font-medium tracking-tight text-white
+                placeholder:text-white/25
+                outline-none
+                focus:border-white/[0.16] focus:bg-white/[0.05]
+                backdrop-blur-sm
+                transition-all duration-300
+              "
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Mobile-only: status filter pills (visible below lg) */}
+          <div className="lg:hidden mb-6">
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pb-1">
+              {STATUS_TABS.map((tab) => {
+                const isActive = status === tab.value;
+                const count = statusCounts[tab.value] ?? 0;
+                return (
+                  <button
+                    key={tab.value}
+                    onClick={() => setStatus(tab.value)}
+                    className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-all duration-200 border ${isActive
+                      ? 'bg-white/[0.08] text-white border-white/10'
+                      : 'text-white/40 hover:text-white/65 border-transparent'
+                      }`}
+                  >
+                    {tab.label}
+                    <span className={`text-[10px] ${isActive ? 'text-white/50' : 'text-white/25'}`}>{count}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Search bar (collapsible) */}
-          <AnimatePresence>
-            {searchOpen && (
+          {/* ━━━ MEDIA GRID ━━━ */}
+          <LayoutGroup id="media-grid">
+            <AnimatePresence>
               <motion.div
-                initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
-                animate={{ height: 'auto', opacity: 1, transitionEnd: { overflow: 'visible' } }}
-                exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-6 pb-10"
               >
-                <div className="pb-4">
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-                    <input
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Search titles, genres, years..."
-                      autoFocus
-                      className="
-                        w-full rounded-xl
-                        bg-white/[0.04] border border-white/[0.08]
-                        pl-11 pr-4 py-3
-                        text-sm font-medium tracking-tight text-white
-                        placeholder:text-white/30
-                        outline-none
-                        focus:border-white/[0.16] focus:bg-white/[0.06]
-                        backdrop-blur-sm
-                        transition-all duration-300
-                      "
-                    />
-                    {query && (
-                      <button
-                        onClick={() => setQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                {!mounted || (!ready && items.length === 0) ? (
+                  <>
+                    {Array.from({ length: 20 }).map((_, i) => (
+                      <div key={`skeleton-${i}`} className="aspect-[2/3] w-full rounded-2xl bg-white/[0.02] animate-pulse" />
+                    ))}
+                  </>
+                ) : renderItemsFinal.length > 0 ? (
+                  <>
+                    {renderItemsFinal.map((item) => (
+                      <MediaCard
+                        key={item.id}
+                        item={item}
+                        layoutId={`card-${item.id}`}
+                        onOpen={() => setExpandedItem(item)}
+                        onEdit={() => openEdit(item)}
+                        onDelete={() => remove(item.id)}
+                        onFav={() => toggleFav(item.id)}
+                      />
+                    ))}
+                    {visibleCount < filteredWithGenre.length && (
+                      <div ref={loadMoreRef} className="col-span-full h-20 w-full" />
                     )}
+                  </>
+                ) : (
+                  <div className="flex h-[40vh] items-center justify-center text-center col-span-full">
+                    <div className="max-w-md">
+                      <div className="mb-4 text-6xl opacity-40">🎬</div>
+                      <h3 className="text-xl font-medium text-white/90">No titles found</h3>
+                      <p className="mt-2 text-sm text-white/50">
+                        Try adjusting your filters or search query, or add something new to your library.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
               </motion.div>
-            )}
-          </AnimatePresence>
+            </AnimatePresence>
 
-          {/* Filters bar (collapsible) */}
-          <AnimatePresence>
-            {filtersOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
-                animate={{ height: 'auto', opacity: 1, transitionEnd: { overflow: 'visible' } }}
-                exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="pb-4 flex flex-wrap items-center gap-3">
-                  <GlassSelect value={sort} onChange={setSort} options={SORT_OPTIONS} minWidth={180} buttonLabelPrefix="Sort" />
-
-                  <button
-                    onClick={() => setOnlyFav((v) => !v)}
-                    className={`liquid-glass liquid-glass-round liquid-glass-hover liquid-glass-press flex items-center gap-2 px-4 py-2 text-sm font-medium tracking-tight transition-all duration-200 ${onlyFav ? '!bg-white/[0.12] !border-white/[0.18] text-white' : 'text-white/70'
-                      }`}
-                  >
-                    <Star className={`h-3.5 w-3.5 ${onlyFav ? 'text-yellow-400' : 'text-white/50'}`} />
-                    Favorites
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* ━━━ PAGE TITLE + STATUS TABS ━━━ */}
-      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-6 lg:px-10 pt-8 pb-2">
-        {/* Title */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-2">
-            {title}
-          </h1>
-          <div className="text-sm text-white/35 mb-8 h-5 flex items-center">
-            {!mounted || (!ready && items.length === 0) ? (
-              <div className="h-4 w-32 bg-white/[0.05] rounded animate-pulse" />
-            ) : (
-              <>{pageItems.length} {pageItems.length === 1 ? 'item' : 'items'} in your library</>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Raycast-style status tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="flex items-center gap-1 mb-6"
-        >
-          <LayoutGroup id="status-tabs">
-            {STATUS_TABS.map((tab) => {
-              const isActive = status === tab.value;
-              const count = statusCounts[tab.value] ?? 0;
-              return (
-                <button
-                  key={tab.value}
-                  onClick={() => setStatus(tab.value)}
-                  className={`relative flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium tracking-tight transition-colors duration-200 select-none ${isActive ? 'text-white' : 'text-white/40 hover:text-white/65'
-                    }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="status-tab-bg"
-                      className="absolute inset-0 rounded-full"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.07)',
-                        border: '1px solid rgba(255, 255, 255, 0.10)',
-                      }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  <span className="relative z-10">{tab.label}</span>
-                  <span className={`relative z-10 text-xs ${isActive ? 'text-white/50' : 'text-white/25'}`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </LayoutGroup>
-        </motion.div>
-      </div>
-
-      {/* ━━━ MEDIA GRID ━━━ */}
-      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-6 lg:px-10">
-        <LayoutGroup id="media-grid">
-          <AnimatePresence>
-            <motion.div
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-x-4 gap-y-8 pb-10"
-            >
-              {!mounted || (!ready && items.length === 0) ? (
-                <>
-                  {Array.from({ length: 30 }).map((_, i) => (
-                    <div key={`skeleton-${i}`} className="aspect-[2/3] w-full rounded-2xl bg-white/[0.02] animate-pulse" />
-                  ))}
-                </>
-              ) : renderItems.length > 0 ? (
-                <>
-                  {renderItems.map((item) => (
-                    <MediaCard
-                      key={item.id}
-                      item={item}
-                      layoutId={`card-${item.id}`}
-                      onOpen={() => setExpandedItem(item)}
-                      onEdit={() => openEdit(item)}
-                      onDelete={() => remove(item.id)}
-                      onFav={() => toggleFav(item.id)}
-                    />
-                  ))}
-                  {visibleCount < filtered.length && (
-                    <div ref={loadMoreRef} className="col-span-full h-20 w-full" />
-                  )}
-                </>
-              ) : (
-                <div className="flex h-[40vh] items-center justify-center text-center col-span-full">
-                  <div className="max-w-md">
-                    <div className="mb-4 text-6xl opacity-40">🎬</div>
-                    <h3 className="text-xl font-medium text-white/90">No titles found</h3>
-                    <p className="mt-2 text-sm text-white/50">
-                      Try adjusting your filters or search query, or add something new to your library.
-                    </p>
-                  </div>
-                </div>
+            {/* EXPANDABLE CARD OVERLAY */}
+            <AnimatePresence>
+              {expandedItem && (
+                <ExpandableCardOverlay
+                  item={expandedItem}
+                  layoutId={`card-${expandedItem.id}`}
+                  onClose={() => setExpandedItem(null)}
+                  onEdit={() => {
+                    const it = expandedItem;
+                    setExpandedItem(null);
+                    openEdit(it);
+                  }}
+                  onDelete={() => {
+                    remove(expandedItem.id);
+                    setExpandedItem(null);
+                  }}
+                  onFav={() => {
+                    toggleFav(expandedItem.id);
+                    setExpandedItem((prev) =>
+                      prev ? { ...prev, favorite: !prev.favorite } : null
+                    );
+                  }}
+                />
               )}
-            </motion.div>
-          </AnimatePresence>
-
-          {/* EXPANDABLE CARD OVERLAY */}
-          <AnimatePresence>
-            {expandedItem && (
-              <ExpandableCardOverlay
-                item={expandedItem}
-                layoutId={`card-${expandedItem.id}`}
-                onClose={() => setExpandedItem(null)}
-                onEdit={() => {
-                  const it = expandedItem;
-                  setExpandedItem(null);
-                  openEdit(it);
-                }}
-                onDelete={() => {
-                  remove(expandedItem.id);
-                  setExpandedItem(null);
-                }}
-                onFav={() => {
-                  toggleFav(expandedItem.id);
-                  setExpandedItem((prev) =>
-                    prev ? { ...prev, favorite: !prev.favorite } : null
-                  );
-                }}
-              />
-            )}
-          </AnimatePresence>
-        </LayoutGroup>
+            </AnimatePresence>
+          </LayoutGroup>
+        </div>
       </div>
 
       {/* ━━━ MODALS ━━━ */}
