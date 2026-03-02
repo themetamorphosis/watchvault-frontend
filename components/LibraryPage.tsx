@@ -10,6 +10,8 @@ import { fetchPoster } from '@/lib/poster';
 import MediaCard from '@/components/MediaCard';
 import EditorModal from '@/components/EditorModal';
 import ImportModal from '@/components/ImportModal';
+import TmdbSearchInput from '@/components/TmdbSearchInput';
+import type { TMDBSearchResult } from '@/lib/tmdb';
 import ExpandableCardOverlay from '@/components/ExpandableCardOverlay';
 import { useSession } from '@/components/SessionProvider';
 import {
@@ -372,6 +374,48 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
     setEditOpen(true);
   }, [mediaType]);
 
+  const openFromTmdb = useCallback(async (result: TMDBSearchResult) => {
+    const now = Date.now();
+    const newItem: Item = {
+      id: crypto.randomUUID?.() ?? Math.random().toString(16).slice(2),
+      title: result.title,
+      mediaType,
+      status: 'pending',
+      favorite: false,
+      year: result.year ?? undefined,
+      coverUrl: result.posterUrl ? result.posterUrl.replace('/w185/', '/w780/') : undefined,
+      genres: result.genres,
+      description: result.overview ?? undefined,
+      createdAt: now,
+      updatedAt: now,
+    } as Item;
+
+    // Optimistically add to local state
+    setItems((prev) => [newItem, ...prev]);
+
+    // Persist to backend
+    const res = await upsertItem({
+      title: newItem.title,
+      mediaType: newItem.mediaType,
+      status: newItem.status as Status,
+      favorite: newItem.favorite,
+      year: newItem.year,
+      coverUrl: newItem.coverUrl,
+      genres: newItem.genres,
+      description: newItem.description,
+    });
+
+    if (res.error) {
+      // Rollback on failure
+      setItems((prev) => prev.filter((i) => i.id !== newItem.id));
+    } else {
+      // Refresh to get the real saved item with server-generated ID
+      const fresh = await getItems();
+      const filtered = fresh.filter((i: Item) => i.mediaType === mediaType);
+      setItems(filtered);
+    }
+  }, [mediaType]);
+
   const openEdit = useCallback((it: Item) => {
     setEditing({ ...it });
     setEditOpen(true);
@@ -414,15 +458,14 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
         }}
       />
 
-      {/* ━━━ STICKY HEADER ━━━ */}
       <div className="sticky top-0 z-40 border-b border-white/[0.06]"
         style={{ background: 'rgba(5, 5, 5, 0.75)', backdropFilter: 'blur(20px) saturate(160%)' }}
       >
         <div className="mx-auto w-full max-w-[1600px] px-6 lg:px-10">
           {/* Top row: logo + nav + actions */}
-          <div className="flex items-center justify-between py-4 gap-4">
-            {/* Left: Back + Logo */}
-            <div className="flex items-center gap-4">
+          <div className="relative flex items-center justify-center py-4">
+            {/* Left: Back + Logo (absolute left) */}
+            <div className="absolute left-0 flex items-center gap-4">
               <Link
                 href="/dashboard"
                 className="liquid-glass liquid-glass-round liquid-glass-hover liquid-glass-press flex items-center justify-center h-9 w-9"
@@ -469,8 +512,8 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
               </div>
             </LayoutGroup>
 
-            {/* Right: Actions */}
-            <div className="flex items-center gap-2">
+            {/* Right: Actions (absolute right) */}
+            <div className="absolute right-0 flex items-center gap-2">
               {/* View & Search Controls */}
               <div className="flex items-center gap-1 bg-white/[0.03] border border-white/5 rounded-full p-1 shadow-sm backdrop-blur-md">
                 {/* Search toggle */}
@@ -492,25 +535,21 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
                 </button>
               </div>
 
-              {/* Add & Import Actions (Split Dropdown) */}
-              <div className="relative z-50 ml-1 flex items-center" ref={addMenuRef}>
-                <div className="flex bg-white text-black rounded-full shadow-[0_0_15px_rgba(255,255,255,0.15)] hover:shadow-[0_0_20px_rgba(255,255,255,0.25)] ring-1 ring-white/20 transition-all duration-300">
-                  <button
-                    onClick={openCreate}
-                    className="flex items-center gap-1.5 h-9 pl-4 pr-3 font-semibold text-sm hover:bg-black/5 active:bg-black/10 transition-colors rounded-l-full"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>New Title</span>
-                  </button>
-                  <div className="w-px h-5 bg-black/10 my-auto" />
-                  <button
-                    onClick={() => setAddMenuOpen((v) => !v)}
-                    className="flex items-center justify-center h-9 px-2 rounded-r-full hover:bg-black/5 active:bg-black/10 transition-colors"
-                    aria-label="More options"
-                  >
-                    <ChevronDown className="h-4 w-4 text-black/70" />
-                  </button>
-                </div>
+              {/* Add via TMDB Search + Import Dropdown */}
+              <div className="relative z-50 ml-1 flex items-center gap-2" ref={addMenuRef}>
+                <TmdbSearchInput
+                  mediaType={mediaType}
+                  onSelect={openFromTmdb}
+                  placeholder={`Search ${mediaType === 'movie' ? 'movies' : mediaType === 'tv' ? 'TV shows' : 'anime'}…`}
+                />
+
+                <button
+                  onClick={() => setAddMenuOpen((v) => !v)}
+                  className="flex items-center justify-center h-9 w-9 rounded-full bg-white/[0.06] border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/10 transition-all duration-200"
+                  aria-label="More options"
+                >
+                  <Download className="h-4 w-4" />
+                </button>
 
                 <AnimatePresence>
                   {addMenuOpen && (
