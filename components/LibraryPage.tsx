@@ -487,50 +487,11 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
         }}
       />
 
-      {/* ── Sub-Tabs: Movies | TV Shows | Anime ── */}
-      <div className="sticky top-[64px] z-40 border-b border-white/[0.06]"
-        style={{ background: 'rgba(5, 5, 5, 0.72)', backdropFilter: 'blur(20px) saturate(160%)' }}
-      >
-        <div className="mx-auto max-w-[1440px] px-6 lg:px-10">
-          <div className="flex items-center gap-1 h-12">
-            <LayoutGroup id="sub-tabs">
-              {SUB_TABS.map((tab) => {
-                const isActive = pathname?.startsWith(tab.href);
-                return (
-                  <Link
-                    key={tab.href}
-                    href={tab.href}
-                    className={`relative flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium tracking-tight transition-colors duration-200 select-none ${isActive ? 'text-white' : 'text-white/40 hover:text-white/65'
-                      }`}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="sub-tab-pill"
-                        className="absolute inset-0 rounded-xl"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.07)',
-                          border: '1px solid rgba(255, 255, 255, 0.10)',
-                        }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                      />
-                    )}
-                    <span className="relative z-10 flex items-center gap-2">
-                      <tab.icon className="h-4 w-4" />
-                      {tab.label}
-                    </span>
-                  </Link>
-                );
-              })}
-            </LayoutGroup>
-          </div>
-        </div>
-      </div>
-
       {/* ── Main Body: Sidebar + Content ── */}
       <div className="relative z-10 mx-auto max-w-[1440px] flex">
         {/* ─ LEFT SIDEBAR ─ */}
         <aside
-          className="hidden lg:flex flex-col flex-shrink-0 border-r border-white/[0.05] sticky top-[112px] self-start h-[calc(100vh-112px)] overflow-hidden transition-all duration-300 ease-in-out"
+          className="hidden lg:flex flex-col flex-shrink-0 border-r border-white/[0.05] sticky top-[64px] self-start h-[calc(100vh-64px)] overflow-hidden transition-all duration-300 ease-in-out"
           style={{ width: sidebarOpen ? 260 : 48, minWidth: sidebarOpen ? 260 : 48 }}
         >
           {/* Toggle button */}
@@ -623,75 +584,114 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
 
         {/* ─ MAIN CONTENT ─ */}
         <div className="flex-1 min-w-0 px-6 lg:px-10 py-8">
-          {/* Title Row */}
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-                {title}
-              </h1>
-              <div className="text-sm text-white/35 mt-1 h-5 flex items-center">
-                {!mounted || (!ready && items.length === 0) ? (
-                  <div className="h-4 w-32 bg-white/[0.05] rounded animate-pulse" />
-                ) : (
-                  <>{pageItems.length} {pageItems.length === 1 ? 'title' : 'titles'} in your collection</>
-                )}
+          {/* Title Row + Inline Sub-Tabs */}
+          <div className="flex flex-col gap-5 mb-6">
+            {/* Sub-Tabs: Movies | TV Shows | Anime — inline pills */}
+            <div className="flex items-center">
+              <div className="inline-flex items-center gap-1 rounded-2xl bg-white/[0.04] border border-white/[0.07] p-1.5">
+                <LayoutGroup id="sub-tabs">
+                  {SUB_TABS.map((tab) => {
+                    const isActive = pathname?.startsWith(tab.href);
+                    return (
+                      <Link
+                        key={tab.href}
+                        href={tab.href}
+                        className={`relative flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-medium tracking-tight transition-colors duration-200 select-none ${isActive ? 'text-white' : 'text-white/40 hover:text-white/65'
+                          }`}
+                      >
+                        {isActive && (
+                          <motion.div
+                            layoutId="sub-tab-pill"
+                            className="absolute inset-0 rounded-xl"
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              border: '1px solid rgba(255, 255, 255, 0.10)',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                            }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                          />
+                        )}
+                        <span className="relative z-10 flex items-center gap-2">
+                          <tab.icon className="h-4 w-4" />
+                          {tab.label}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </LayoutGroup>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Actions: TMDB search + Import */}
-            <div className="flex items-center gap-2">
-              <div className="relative z-50 flex items-center gap-2" ref={addMenuRef}>
-                <TmdbSearchInput
-                  mediaType={mediaType}
-                  onSelect={openFromTmdb}
-                  placeholder={`Add ${mediaType === 'movie' ? 'movie' : mediaType === 'tv' ? 'TV show' : 'anime'}…`}
-                />
-
-                <button
-                  onClick={() => setAddMenuOpen((v) => !v)}
-                  className="flex items-center justify-center h-9 w-9 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200"
-                  aria-label="Import"
-                  title="Import data"
-                >
-                  <Download className="h-4 w-4" />
-                </button>
-
-                <AnimatePresence>
-                  {addMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                      transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
-                      className="absolute right-0 top-full mt-2 w-48 bg-[#151515] border border-white/10 rounded-2xl shadow-2xl p-1.5 origin-top-right overflow-hidden z-[100]"
-                    >
-                      <button
-                        onClick={() => {
-                          setAddMenuOpen(false);
-                          openCreate();
-                        }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[14px] font-medium text-white/80 rounded-xl hover:bg-white/10 hover:text-white transition-colors"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add Manually
-                      </button>
-                      <button
-                        onClick={() => {
-                          setAddMenuOpen(false);
-                          setImportOpen(true);
-                        }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[14px] font-medium text-white/80 rounded-xl hover:bg-white/10 hover:text-white transition-colors"
-                      >
-                        <Download className="h-4 w-4" />
-                        Import Data
-                      </button>
-                    </motion.div>
+            {/* Title + Count + Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                  {title}
+                </h1>
+                <div className="text-sm text-white/35 mt-1 h-5 flex items-center">
+                  {!mounted || (!ready && items.length === 0) ? (
+                    <div className="h-4 w-32 bg-white/[0.05] rounded animate-pulse" />
+                  ) : (
+                    <>{pageItems.length} {pageItems.length === 1 ? 'title' : 'titles'} in your collection</>
                   )}
-                </AnimatePresence>
+                </div>
+              </motion.div>
+
+              {/* Actions: TMDB search + Import */}
+              <div className="flex items-center gap-2">
+                <div className="relative z-50 flex items-center gap-2" ref={addMenuRef}>
+                  <TmdbSearchInput
+                    mediaType={mediaType}
+                    onSelect={openFromTmdb}
+                    placeholder={`Add ${mediaType === 'movie' ? 'movie' : mediaType === 'tv' ? 'TV show' : 'anime'}…`}
+                  />
+
+                  <button
+                    onClick={() => setAddMenuOpen((v) => !v)}
+                    className="flex items-center justify-center h-9 w-9 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200"
+                    aria-label="Import"
+                    title="Import data"
+                  >
+                    <Download className="h-4 w-4" />
+                  </button>
+
+                  <AnimatePresence>
+                    {addMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                        transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                        className="absolute right-0 top-full mt-2 w-48 bg-[#151515] border border-white/10 rounded-2xl shadow-2xl p-1.5 origin-top-right overflow-hidden z-[100]"
+                      >
+                        <button
+                          onClick={() => {
+                            setAddMenuOpen(false);
+                            openCreate();
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[14px] font-medium text-white/80 rounded-xl hover:bg-white/10 hover:text-white transition-colors"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add Manually
+                        </button>
+                        <button
+                          onClick={() => {
+                            setAddMenuOpen(false);
+                            setImportOpen(true);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[14px] font-medium text-white/80 rounded-xl hover:bg-white/10 hover:text-white transition-colors"
+                        >
+                          <Download className="h-4 w-4" />
+                          Import Data
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
           </div>

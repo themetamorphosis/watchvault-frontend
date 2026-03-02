@@ -172,18 +172,19 @@ export default function TmdbSearchInput({
                     }}
                     placeholder={placeholder}
                     className={`
-                      h-8
-                      rounded-full
-                      bg-white text-zinc-900
-                      pl-8 pr-7
+                      h-9
+                      rounded-2xl
+                      bg-white/[0.06] text-white
+                      pl-9 pr-8
                       text-[13px] font-medium tracking-tight
-                      placeholder:text-zinc-400
+                      placeholder:text-white/30
                       outline-none
-                      ring-1 ring-white/20
-                      transition-all duration-300
+                      border border-white/[0.08]
+                      backdrop-blur-sm
+                      transition-all duration-300 ease-out
                       ${isExpanded
-                            ? 'w-[220px] sm:w-[280px] shadow-[0_0_20px_rgba(255,255,255,0.2)]'
-                            : 'w-[180px] sm:w-[220px] shadow-[0_0_12px_rgba(255,255,255,0.12)] focus:w-[220px] sm:focus:w-[280px] focus:shadow-[0_0_20px_rgba(255,255,255,0.2)]'
+                            ? 'w-[220px] sm:w-[280px] border-white/[0.14] bg-white/[0.08] shadow-[0_0_20px_rgba(255,255,255,0.06)]'
+                            : 'w-[180px] sm:w-[220px] hover:bg-white/[0.08] hover:border-white/[0.12] focus:w-[220px] sm:focus:w-[280px] focus:border-white/[0.14] focus:bg-white/[0.08] focus:shadow-[0_0_20px_rgba(255,255,255,0.06)]'
                         }
                     `}
                     autoComplete="off"
@@ -198,7 +199,7 @@ export default function TmdbSearchInput({
                             setHasSearched(false);
                             inputRef.current?.focus();
                         }}
-                        className="absolute right-2 text-zinc-400 hover:text-zinc-600 transition-colors"
+                        className="absolute right-2.5 text-white/30 hover:text-white/70 transition-colors"
                     >
                         <X className="h-3 w-3" />
                     </button>
