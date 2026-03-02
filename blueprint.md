@@ -41,5 +41,5 @@ WatchVault is a personal watchlist tracker for Movies, TV Shows, and Anime. Buil
 - **Pages**: `UnderDevelopmentPage`
 - **Legacy**: `LibraryPage`, `MediaCard`, `ExpandableCardOverlay` (kept as reference)
 
-## Most Recent Change: App Shell & Navigation Redesign
-Implemented full app shell with top header navigation, library sub-tabs, filter sidebar, dashboard page, 3 library pages with dummy data, and 3 under-development placeholder pages.
+## Most Recent Change: Dashboard Statistics Integration
+Currently working on fixing the dashboard statistics to stop using hardcoded visual mockups and dynamically calculate and present the user's actual `watchlist` items. This involves computing Hours Watched, Top Genre, Longest Series, and individual status counts.
