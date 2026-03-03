@@ -35,6 +35,10 @@ const HeroBackground = dynamic(() => import("@/components/HeroBackground"), {
   ssr: false,
 });
 
+const DemoCard = dynamic(() => import("@/components/DemoCard"), {
+  ssr: false,
+});
+
 /* ─── Scroll-triggered reveal with stagger support ─── */
 function Reveal({
   children,
@@ -579,6 +583,62 @@ export default function HomePage() {
                 It&apos;s about never missing a thing.
               </p>
             </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ━━━ DEMO CARD ━━━ */}
+      <section className="relative py-24 sm:py-32 px-6 sm:px-10 overflow-hidden">
+        <div className="section-divider mb-24 sm:mb-32" />
+        <div className="mx-auto max-w-[1400px]">
+          <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
+            {/* Left: text content — sticky on desktop */}
+            <div className="w-full lg:w-[340px] flex-shrink-0 lg:sticky lg:top-32">
+              <Reveal>
+                <p className="text-xs font-semibold text-white/35 tracking-[0.2em] uppercase mb-4">
+                  See it in action
+                </p>
+              </Reveal>
+              <Reveal delay={0.05}>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4 leading-[1.1]">
+                  A glimpse inside WatchVault.
+                </h2>
+              </Reveal>
+              <Reveal delay={0.1}>
+                <p className="text-base sm:text-lg text-white/35 mb-8 leading-relaxed">
+                  Explore the library, dashboard stats, and tracking workflow — all without signing up.
+                </p>
+              </Reveal>
+              <Reveal delay={0.15}>
+                <div className="flex flex-col gap-3 text-sm text-white/30">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-rose-500/10 flex items-center justify-center flex-shrink-0">
+                      <Film className="h-4 w-4 text-rose-400" />
+                    </div>
+                    <span>Browse your poster library</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-violet-500/10 flex items-center justify-center flex-shrink-0">
+                      <Layers className="h-4 w-4 text-violet-400" />
+                    </div>
+                    <span>Real-time dashboard insights</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+                      <Zap className="h-4 w-4 text-cyan-400" />
+                    </div>
+                    <span>Track status, favorites &amp; ratings</span>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+
+            {/* Right: demo card — fills remaining space */}
+            <div className="flex-1 min-w-0 w-full">
+              <Reveal delay={0.2}>
+                <DemoCard />
+              </Reveal>
+            </div>
           </div>
         </div>
       </section>

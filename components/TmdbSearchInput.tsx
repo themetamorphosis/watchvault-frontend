@@ -183,8 +183,8 @@ export default function TmdbSearchInput({
                       backdrop-blur-sm
                       transition-all duration-300 ease-out
                       ${isExpanded
-                            ? 'w-[220px] sm:w-[280px] border-white/[0.14] bg-white/[0.08] shadow-[0_0_20px_rgba(255,255,255,0.06)]'
-                            : 'w-[180px] sm:w-[220px] hover:bg-white/[0.08] hover:border-white/[0.12] focus:w-[220px] sm:focus:w-[280px] focus:border-white/[0.14] focus:bg-white/[0.08] focus:shadow-[0_0_20px_rgba(255,255,255,0.06)]'
+                            ? 'w-[160px] sm:w-[280px] border-white/[0.14] bg-white/[0.08] shadow-[0_0_20px_rgba(255,255,255,0.06)]'
+                            : 'w-[140px] sm:w-[220px] hover:bg-white/[0.08] hover:border-white/[0.12] focus:w-[160px] sm:focus:w-[280px] focus:border-white/[0.14] focus:bg-white/[0.08] focus:shadow-[0_0_20px_rgba(255,255,255,0.06)]'
                         }
                     `}
                     autoComplete="off"

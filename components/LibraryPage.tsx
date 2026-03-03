@@ -14,6 +14,7 @@ import TmdbSearchInput from '@/components/TmdbSearchInput';
 import type { TMDBSearchResult } from '@/lib/tmdb';
 import ExpandableCardOverlay from '@/components/ExpandableCardOverlay';
 import { useSession } from '@/components/SessionProvider';
+import { MobileFilterDrawer } from '@/components/FilterSidebar';
 import {
   Film,
   Tv,
@@ -182,14 +183,13 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
   const [onlyFav, setOnlyFav] = useState(false);
   const [sort, setSort] = useState<'recent' | 'title' | 'year'>('recent');
   // UI states
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<Item | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [expandedItem, setExpandedItem] = useState<Item | null>(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const addMenuRef = useRef<HTMLDivElement>(null);
 
   useOutsideClick(addMenuRef, () => {
@@ -299,7 +299,16 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
   /* ── Callbacks ── */
   const ensureCover = useCallback(async (it: Item): Promise<void> => {
     if (it.coverUrl && it.genres && it.genres.length > 0 && it.description) return;
-    const fetchResult = await fetchPoster(it.title, it.mediaType, it.year);
+
+    let fetchResult;
+    try {
+      fetchResult = await fetchPoster(it.title, it.mediaType, it.year);
+    } catch {
+      // Backend unreachable — skip silently
+      try { sessionStorage.setItem(`wv-poster-skip-${it.id}`, '1'); } catch { }
+      return;
+    }
+
     if (!fetchResult) {
       try { sessionStorage.setItem(`wv-poster-skip-${it.id}`, '1'); } catch { }
       return;
@@ -641,8 +650,16 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
                 </div>
               </motion.div>
 
-              {/* Actions: TMDB search + Import */}
+              {/* Actions: TMDB search + Import + Mobile Filter */}
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setMobileFilterOpen(true)}
+                  className="lg:hidden flex items-center justify-center h-9 px-3 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200"
+                >
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  <span className="text-sm font-medium">Filters</span>
+                </button>
+
                 <div className="relative z-50 flex items-center gap-2" ref={addMenuRef}>
                   <TmdbSearchInput
                     mediaType={mediaType}
@@ -819,6 +836,14 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
           </LayoutGroup>
         </div>
       </div>
+
+      {/* ━━━ MOBILE FILTER DRAWER ━━━ */}
+      <MobileFilterDrawer
+        open={mobileFilterOpen}
+        onClose={() => setMobileFilterOpen(false)}
+        activeFilter={status}
+        onFilterChange={(newStatus: string) => setStatus(newStatus as Status | 'all')}
+      />
 
       {/* ━━━ MODALS ━━━ */}
       {

@@ -84,7 +84,7 @@ function DonutChart({
 
     return (
         <div ref={ref}>
-            <div className="flex items-center gap-8">
+            <div className="flex flex-col sm:flex-row items-center gap-8">
                 <div className="relative flex-shrink-0">
                     <svg width="150" height="150" viewBox="0 0 150 150">
                         {data.map((seg, i) => {
@@ -134,7 +134,7 @@ function DonutChart({
                         </text>
                     </svg>
                 </div>
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 w-full sm:w-auto">
                     {data.map((seg) => (
                         <div key={seg.label} className="flex items-center gap-3">
                             <div

@@ -85,6 +85,7 @@ export default function TopNavBar() {
     /* Measure active tab and position pill */
     useEffect(() => {
         if (activeIdx < 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setPillStyle(null);
             return;
         }
@@ -94,6 +95,7 @@ export default function TopNavBar() {
         if (!parent) return;
         const parentRect = parent.getBoundingClientRect();
         const elRect = el.getBoundingClientRect();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPillStyle({
             left: elRect.left - parentRect.left,
             width: elRect.width,
@@ -118,7 +120,7 @@ export default function TopNavBar() {
                     </Link>
 
                     {/* ── Center: Nav Tabs ── */}
-                    <nav className="flex-1 flex items-center justify-center gap-0.5 overflow-x-auto scrollbar-hide">
+                    <nav className="flex-1 flex items-center justify-start sm:justify-center gap-0.5 overflow-x-auto scrollbar-hide px-2">
                         <div className="relative flex items-center gap-0.5">
                             {/* Animated pill background — positioned via ref measurements */}
                             {pillStyle && (

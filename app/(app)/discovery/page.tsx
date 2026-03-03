@@ -5,11 +5,12 @@ export default function DiscoveryPage() {
     return (
         <UnderDevelopmentPage
             title="Discovery"
-            description="Explore new movies, TV shows, and anime based on your taste, trending content, and curated collections."
+            description="Explore new movies, TV shows, and anime tailored to your taste. Get personalized recommendations and discover trending content."
             features={[
-                "Personalized recommendations based on your watchlist",
-                "Trending and popular titles across all categories",
-                "Curated collections and editorial picks",
+                "Personalized 'For You' recommendations",
+                "Trending and popular content discovery",
+                "Mood-based browsing with curated collections",
+                "Advanced filters and smart search",
             ]}
             icon={<Compass className="h-10 w-10 text-violet-400/40" />}
         />
