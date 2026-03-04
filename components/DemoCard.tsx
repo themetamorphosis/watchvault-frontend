@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Heart, Star, Eye, Clock, Bookmark, Film, Tv, Sparkles,
     TrendingUp, BarChart3, Activity, Zap, Search, SlidersHorizontal,
-    ChevronRight, Play, Flame, Trophy, MousePointer2,
+    ChevronRight, Play, Flame, Trophy, MousePointer2, Compass
 } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════
@@ -14,15 +14,21 @@ import {
 
 const POSTERS = [
     { title: "Interstellar", year: 2014, genre: "Sci-Fi", type: "movie", poster: "https://image.tmdb.org/t/p/w342/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", status: "watched" as const, fav: true, rating: 5 },
-    { title: "Breaking Bad", year: 2008, genre: "Drama", type: "tv", poster: "https://image.tmdb.org/t/p/w342/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", status: "watched" as const, fav: true, rating: 5 },
-    { title: "Attack on Titan", year: 2013, genre: "Action", type: "anime", poster: "https://image.tmdb.org/t/p/w342/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg", status: "pending" as const, fav: false, rating: 4 },
+    { title: "The Godfather", year: 1972, genre: "Drama", type: "movie", poster: "https://image.tmdb.org/t/p/w342/3bhkrj58Vtu7enYsRolD1fZdja1.jpg", status: "watched" as const, fav: true, rating: 5 },
+    { title: "John Wick", year: 2014, genre: "Action", type: "movie", poster: "https://m.media-amazon.com/images/M/MV5BMTU2NjA1ODgzMF5BMl5BanBnXkFtZTgwMTM2MTI4MjE@._V1_SX300.jpg", status: "pending" as const, fav: false, rating: 4 },
     { title: "Inception", year: 2010, genre: "Thriller", type: "movie", poster: "https://image.tmdb.org/t/p/w342/ljsZTbVsrQSqZgWeep2B1QiDKuh.jpg", status: "watched" as const, fav: true, rating: 5 },
-    { title: "Stranger Things", year: 2016, genre: "Mystery", type: "tv", poster: "https://image.tmdb.org/t/p/w342/uOOtwVbSr4QDjAGIifLDwpb2Pdl.jpg", status: "pending" as const, fav: false, rating: 4 },
-    { title: "Spirited Away", year: 2001, genre: "Fantasy", type: "anime", poster: "https://image.tmdb.org/t/p/w342/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg", status: "watched" as const, fav: true, rating: 5 },
+    { title: "Oppenheimer", year: 2023, genre: "History", type: "movie", poster: "https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg", status: "pending" as const, fav: false, rating: 4 },
+    { title: "Blade Runner 2049", year: 2017, genre: "Sci-Fi", type: "movie", poster: "https://image.tmdb.org/t/p/w342/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg", status: "watched" as const, fav: true, rating: 5 },
     { title: "The Matrix", year: 1999, genre: "Sci-Fi", type: "movie", poster: "https://image.tmdb.org/t/p/w342/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg", status: "watched" as const, fav: true, rating: 5 },
-    { title: "Demon Slayer", year: 2019, genre: "Action", type: "anime", poster: "https://image.tmdb.org/t/p/w342/xUfRZu2mi8jH6SzQEJGP6tjBuYj.jpg", status: "pending" as const, fav: false, rating: 4 },
+    { title: "Gladiator", year: 2000, genre: "Action", type: "movie", poster: "https://m.media-amazon.com/images/M/MV5BYWZjMjk3ZTItODQ2ZC00NTY5LWE0ZDYtZTI3MjcwN2Q5NTVkXkEyXkFqcGdeQXVyODk4OTc3MTY@._V1_SX300.jpg", status: "pending" as const, fav: false, rating: 4 },
     { title: "Pulp Fiction", year: 1994, genre: "Crime", type: "movie", poster: "https://image.tmdb.org/t/p/w342/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg", status: "watched" as const, fav: true, rating: 5 },
     { title: "Fight Club", year: 1999, genre: "Drama", type: "movie", poster: "https://image.tmdb.org/t/p/w342/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg", status: "watched" as const, fav: true, rating: 5 },
+    { title: "Dune", year: 2021, genre: "Sci-Fi", type: "movie", poster: "https://image.tmdb.org/t/p/w342/d5NXSklXo0qyIYkgV94XAgMIckC.jpg", status: "watched" as const, fav: true, rating: 5 },
+    { title: "The Dark Knight", year: 2008, genre: "Action", type: "movie", poster: "https://image.tmdb.org/t/p/w342/qJ2tW6WMUDux911r6m7haRef0WH.jpg", status: "watched" as const, fav: true, rating: 5 },
+    { title: "Parasite", year: 2019, genre: "Thriller", type: "movie", poster: "https://image.tmdb.org/t/p/w342/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg", status: "pending" as const, fav: true, rating: 5 },
+    { title: "Joker", year: 2019, genre: "Drama", type: "movie", poster: "https://image.tmdb.org/t/p/w342/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg", status: "watched" as const, fav: false, rating: 4 },
+    { title: "Spider-Man", year: 2018, genre: "Animation", type: "movie", poster: "https://image.tmdb.org/t/p/w342/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg", status: "pending" as const, fav: false, rating: 4 },
+    { title: "Mad Max: Fury Road", year: 2015, genre: "Action", type: "movie", poster: "https://image.tmdb.org/t/p/w342/8tZYtuWezp8JbcsvHYO0O46tFbo.jpg", status: "watched" as const, fav: true, rating: 5 },
 ];
 
 const STATUS_CONFIG = {
@@ -32,9 +38,9 @@ const STATUS_CONFIG = {
 };
 
 const TABS = [
-    { id: "library", label: "Library", icon: Film },
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-    { id: "tracking", label: "Tracking", icon: Activity },
+    { id: "library", label: "Library", icon: Film },
+    { id: "discovery", label: "Discovery", icon: Compass },
 ] as const;
 
 type TabId = typeof TABS[number]["id"];
@@ -128,20 +134,20 @@ function LibraryTab({ highlightPoster }: { highlightPoster: number | null }) {
     const GENRES = ["Action", "Adventure", "Comedy", "Crime", "Drama", "Fantasy", "Horror", "Mystery", "Romance", "Sci-Fi", "Thriller"];
 
     return (
-        <div className="flex gap-3 h-full">
+        <div className="flex gap-4 h-full">
             {/* ── Left sidebar ── */}
-            <div className="w-[120px] flex-shrink-0 space-y-3 border-r border-white/[0.05] pr-3">
+            <div className="w-[140px] flex-shrink-0 space-y-4 border-r border-white/[0.05] pr-4">
                 {/* Status filters */}
                 <div>
-                    <span className="text-[8px] uppercase tracking-widest text-white/30 font-semibold">Status</span>
-                    <div className="mt-1.5 space-y-0.5">
+                    <span className="text-[10px] uppercase tracking-widest text-white/30 font-semibold">Status</span>
+                    <div className="mt-2 space-y-1">
                         {[
                             { label: "All", count: 10, active: true },
                             { label: "Watched", count: 7 },
                             { label: "Pending", count: 2 },
                             { label: "Wishlisted", count: 1 },
                         ].map((s) => (
-                            <div key={s.label} className={`flex items-center justify-between px-2 py-1 rounded-md text-[9px] transition-all ${s.active ? "bg-white/[0.06] text-white/80" : "text-white/40 hover:bg-white/[0.03]"
+                            <div key={s.label} className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[11px] transition-all ${s.active ? "bg-white/[0.06] text-white/80" : "text-white/40 hover:bg-white/[0.03]"
                                 }`}>
                                 <span>{s.label}</span>
                                 <span className="text-white/25 tabular-nums">{s.count}</span>
@@ -151,67 +157,67 @@ function LibraryTab({ highlightPoster }: { highlightPoster: number | null }) {
                 </div>
 
                 {/* Favorites */}
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[9px] text-white/40 hover:bg-white/[0.03] cursor-default">
-                    <Heart className="h-2.5 w-2.5" />
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-white/40 hover:bg-white/[0.03] cursor-default">
+                    <Heart className="h-3 w-3" />
                     <span>Favorites Only</span>
                 </div>
 
                 {/* Sort */}
                 <div>
-                    <span className="text-[8px] uppercase tracking-widest text-white/30 font-semibold">Sort By</span>
-                    <div className="mt-1.5 px-2 py-1.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-[9px] text-white/60">
+                    <span className="text-[10px] uppercase tracking-widest text-white/30 font-semibold">Sort By</span>
+                    <div className="mt-2 px-2.5 py-2 rounded-md bg-white/[0.04] border border-white/[0.06] text-[11px] text-white/60">
                         Recently added ▾
                     </div>
                 </div>
 
                 {/* Genres */}
                 <div>
-                    <span className="text-[8px] uppercase tracking-widest text-white/30 font-semibold">Genres</span>
-                    <div className="mt-1.5 flex flex-wrap gap-1">
+                    <span className="text-[10px] uppercase tracking-widest text-white/30 font-semibold">Genres</span>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
                         {GENRES.map((g) => (
-                            <span key={g} className="px-1.5 py-0.5 rounded text-[7px] text-white/35 bg-white/[0.03] border border-white/[0.05]">{g}</span>
+                            <span key={g} className="px-2 py-1 rounded text-[9px] text-white/35 bg-white/[0.03] border border-white/[0.05]">{g}</span>
                         ))}
                     </div>
                 </div>
             </div>
 
             {/* ── Right: content area ── */}
-            <div className="flex-1 min-w-0 space-y-2.5">
+            <div className="flex-1 min-w-0 space-y-4 pr-2">
                 {/* Category tabs + search */}
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                         {[
                             { label: "Movies", icon: Film, active: true },
                             { label: "TV Shows", icon: Tv },
                             { label: "Anime", icon: Sparkles },
                         ].map((c) => (
-                            <div key={c.label} className={`flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-medium ${c.active ? "bg-white/[0.08] text-white/80 border border-white/[0.1]" : "text-white/35"
+                            <div key={c.label} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium ${c.active ? "bg-white/[0.08] text-white/80 border border-white/[0.1]" : "text-white/35"
                                 }`}>
-                                <c.icon className="h-2.5 w-2.5" />
+                                <c.icon className="h-3 w-3" />
                                 {c.label}
                             </div>
                         ))}
                     </div>
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.06] text-[8px] text-white/30">
-                        <Search className="h-2.5 w-2.5" />
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-[10px] text-white/30">
+                        <Search className="h-3 w-3" />
                         Search...
                     </div>
                 </div>
 
                 {/* Title */}
                 <div>
-                    <h3 className="text-sm font-bold text-white/90">Movies</h3>
-                    <p className="text-[8px] text-white/30">10 titles in your collection</p>
+                    <h3 className="text-base font-bold text-white/90">Movies</h3>
+                    <p className="text-[10px] text-white/30 mt-0.5">{POSTERS.length} titles in your collection</p>
                 </div>
 
                 {/* Poster grid — 5 columns */}
-                <div className="grid grid-cols-5 gap-1.5">
-                    {POSTERS.map((item, i) => {
+                <div className="grid grid-cols-5 gap-3">
+                    {POSTERS.slice(0, 10).map((item, i) => {
                         const st = STATUS_CONFIG[item.status];
                         const isHighlighted = highlightPoster === i;
                         return (
                             <motion.div
-                                key={item.title}
+                                key={item.title + i}
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.03, duration: 0.3 }}
@@ -244,9 +250,9 @@ function LibraryTab({ highlightPoster }: { highlightPoster: number | null }) {
                                         </div>
                                     )}
                                 </div>
-                                <div className="mt-0.5 px-0.5">
-                                    <div className="text-[8px] font-medium text-white/60 truncate">{item.title}</div>
-                                    <div className="text-[7px] text-white/25">{item.year} • {item.genre}</div>
+                                <div className="mt-1 px-0.5">
+                                    <div className="text-[10px] font-medium text-white/60 truncate">{item.title}</div>
+                                    <div className="text-[9px] text-white/25 mt-0.5">{item.year} • {item.genre}</div>
                                 </div>
                             </motion.div>
                         );
@@ -371,152 +377,219 @@ function DashboardTab() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   TRACKING TAB
+   DISCOVERY TAB
    ═══════════════════════════════════════════════════════ */
-function TrackingTab() {
-    const [step, setStep] = useState(0);
-    const [isFav, setIsFav] = useState(false);
-    const [rating, setRating] = useState(0);
-    const item = POSTERS[0];
+function DiscoveryTab() {
+    const [activeIndex, setActiveIndex] = useState(0);
+    const featuredItems = [
+        { ...POSTERS[3], desc: "A thief who steals corporate secrets through the use of dream-sharing technology." },
+        { ...POSTERS[0], desc: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival." },
+        { ...POSTERS[6], desc: "A computer hacker learns from mysterious rebels about the true nature of his reality." }
+    ];
 
     useEffect(() => {
-        const timers: NodeJS.Timeout[] = [];
-        let cancelled = false;
-
-        function run() {
-            if (cancelled) return;
-            setStep(0); setIsFav(false); setRating(0);
-
-            const steps: [number, () => void][] = [
-                [1500, () => setStep(1)],
-                [3000, () => setStep(2)],
-                [4500, () => { setStep(3); setIsFav(true); }],
-            ];
-            for (let s = 1; s <= 5; s++) {
-                steps.push([5500 + s * 350, () => { setStep(3 + s); setRating(s); }]);
-            }
-            steps.forEach(([ms, fn]) => {
-                timers.push(setTimeout(() => { if (!cancelled) fn(); }, ms));
-            });
-            timers.push(setTimeout(() => { if (!cancelled) run(); }, 9000));
-        }
-        run();
-        return () => { cancelled = true; timers.forEach(clearTimeout); };
+        const interval = setInterval(() => {
+            setActiveIndex((prev) => (prev + 1) % featuredItems.length);
+        }, 4000);
+        return () => clearInterval(interval);
     }, []);
 
-    const statuses = [
-        { label: "Wishlisted", icon: Bookmark, color: "text-violet-400", bg: "bg-violet-500/20" },
-        { label: "Pending", icon: Clock, color: "text-amber-400", bg: "bg-amber-500/20" },
-        { label: "Watched", icon: Eye, color: "text-emerald-400", bg: "bg-emerald-500/20" },
+    const trending = [POSTERS[8], POSTERS[1], POSTERS[7], POSTERS[14], POSTERS[10], POSTERS[4], POSTERS[2], POSTERS[12], POSTERS[5], POSTERS[11]];
+    const forYou = [POSTERS[0], POSTERS[9], POSTERS[15], POSTERS[3], POSTERS[13], POSTERS[6], POSTERS[10], POSTERS[1], POSTERS[14]];
+
+    const categories = [
+        { name: "Action", icon: Flame, color: "text-orange-400", border: "border-orange-400/20", bg: "bg-orange-400/10" },
+        { name: "Sci-Fi", icon: Zap, color: "text-cyan-400", border: "border-cyan-400/20", bg: "bg-cyan-400/10" },
+        { name: "Drama", icon: Heart, color: "text-rose-400", border: "border-rose-400/20", bg: "bg-rose-400/10" },
+        { name: "Anime", icon: Tv, color: "text-indigo-400", border: "border-indigo-400/20", bg: "bg-indigo-400/10" },
     ];
 
     return (
-        <div className="flex gap-4 items-start">
-            {/* Left: poster */}
-            <div className="flex-shrink-0 w-[110px]">
-                <div className="relative overflow-hidden rounded-lg">
-                    <img src={item.poster} alt={item.title} className="w-full aspect-[2/3] object-cover rounded-lg ring-1 ring-white/10" />
-                    <div className="absolute -inset-2 -z-10 rounded-xl blur-2xl opacity-25 bg-cyan-500/30" />
+        <div className="flex flex-col gap-4 h-full pb-6">
+            {/* Featured Banner */}
+            <div className="relative h-[160px] w-full rounded-xl overflow-hidden flex-shrink-0 border border-white/[0.08] shadow-2xl">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeIndex}
+                        initial={{ opacity: 0, scale: 1.05 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="absolute inset-0"
+                    >
+                        {/* Background Blur */}
+                        <div className="absolute inset-0 scale-110">
+                            <img src={featuredItems[activeIndex].poster} className="w-full h-full object-cover blur-xl opacity-30" />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a]/90 via-[#0a0a0a]/50 to-transparent" />
+
+                        <div className="absolute inset-0 p-4 flex items-center gap-5">
+                            <motion.div
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.2, duration: 0.5 }}
+                                className="h-full aspect-[2/3] rounded-md shadow-[0_8px_30px_rgb(0,0,0,0.8)] overflow-hidden ring-1 ring-white/20 flex-shrink-0"
+                            >
+                                <img src={featuredItems[activeIndex].poster} className="w-full h-full object-cover" />
+                            </motion.div>
+
+                            <div className="flex-1 min-w-0 pr-4">
+                                <motion.span
+                                    initial={{ y: 5, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="px-2 py-0.5 rounded text-[8px] font-bold bg-violet-500/80 text-white uppercase tracking-widest mb-2 inline-flex items-center gap-1"
+                                >
+                                    <Sparkles className="w-2.5 h-2.5" /> Spotlight
+                                </motion.span>
+
+                                <motion.h2
+                                    initial={{ y: 5, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="text-xl font-bold tracking-tight text-white mb-1 truncate"
+                                >
+                                    {featuredItems[activeIndex].title}
+                                </motion.h2>
+
+                                <motion.div
+                                    initial={{ y: 5, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.5 }}
+                                    className="flex items-center gap-2 text-[9px] text-white/50 mb-2"
+                                >
+                                    <span>{featuredItems[activeIndex].year}</span>
+                                    <span className="w-1 h-1 rounded-full bg-white/20" />
+                                    <span>{featuredItems[activeIndex].genre}</span>
+                                    <span className="w-1 h-1 rounded-full bg-white/20" />
+                                    <span className="flex items-center gap-0.5 text-amber-400">
+                                        <Star className="w-2.5 h-2.5 fill-current" /> {featuredItems[activeIndex].rating}.0
+                                    </span>
+                                </motion.div>
+
+                                <motion.p
+                                    initial={{ y: 5, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.6 }}
+                                    className="text-[10px] text-white/60 leading-relaxed line-clamp-2 max-w-[90%] mb-3.5"
+                                >
+                                    {featuredItems[activeIndex].desc}
+                                </motion.p>
+
+                                <motion.div
+                                    initial={{ y: 5, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.7 }}
+                                    className="flex gap-2"
+                                >
+                                    <button className="px-3.5 py-1.5 rounded-full bg-white text-black text-[10px] font-bold hover:bg-white/90 transition-colors flex items-center gap-1.5">
+                                        <Play className="w-3 h-3 fill-current" /> Trailer
+                                    </button>
+                                    <button className="px-3.5 py-1.5 rounded-full bg-white/[0.08] text-white text-[10px] font-medium hover:bg-white/[0.15] transition-colors flex items-center gap-1.5 border border-white/[0.1]">
+                                        <Bookmark className="w-3 h-3" /> Save
+                                    </button>
+                                </motion.div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </AnimatePresence>
+            </div>
+
+            {/* Quick Categories */}
+            <div className="flex gap-2 px-1 overflow-x-auto scrollbar-hide flex-shrink-0 pb-1">
+                {categories.map((cat, i) => (
+                    <motion.div
+                        key={cat.name}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 + i * 0.1, duration: 0.4 }}
+                        className={`flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg border ${cat.border} ${cat.bg} cursor-pointer hover:bg-white/[0.05] transition-colors`}
+                    >
+                        <cat.icon className={`w-3.5 h-3.5 ${cat.color}`} />
+                        <span className={`text-[10px] font-bold ${cat.color} tracking-wide`}>{cat.name}</span>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* Top Picks Row */}
+            <div className="flex-shrink-0 flex flex-col">
+                <div className="flex items-center justify-between mb-3 px-1">
+                    <h3 className="text-xs font-bold flex items-center gap-1.5 text-white/90 tracking-wide">
+                        <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        Top Picks for You
+                    </h3>
+                    <button className="text-[10px] font-medium text-white/40 hover:text-white/80 transition-colors flex items-center gap-0.5">
+                        See all <ChevronRight className="w-3 h-3" />
+                    </button>
+                </div>
+
+                <div className="flex gap-3 overflow-x-hidden px-1">
+                    {forYou.map((item, i) => (
+                        <motion.div
+                            key={"foryou" + item.title + i}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.6 + i * 0.08, duration: 0.5, ease: "easeOut" }}
+                            className="flex-shrink-0 w-[95px] group cursor-pointer"
+                        >
+                            <div className="rounded-lg overflow-hidden border border-white/10 relative aspect-[2/3] mb-2 shadow-lg">
+                                <img src={item.poster} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[8px] font-bold text-white bg-white/20 backdrop-blur-md px-1.5 py-0.5 rounded uppercase">{item.type}</span>
+                                        <Heart className="w-3 h-3 text-white/70 hover:text-rose-400 hover:fill-rose-400 transition-colors" />
+                                    </div>
+                                </div>
+                            </div>
+                            <h4 className="text-[11px] font-semibold text-white/80 truncate group-hover:text-white transition-colors">{item.title}</h4>
+                            <p className="text-[9px] text-white/40 mt-0.5">{item.genre}</p>
+                        </motion.div>
+                    ))}
                 </div>
             </div>
 
-            {/* Right: info */}
-            <div className="flex-1 min-w-0 space-y-3">
-                <div>
-                    <h3 className="text-base sm:text-lg font-bold tracking-tight text-white">{item.title}</h3>
-                    <p className="text-[10px] text-white/40 mt-0.5">{item.year} • {item.genre} • Movie</p>
-                    <p className="text-[9px] text-white/25 mt-1.5 leading-relaxed line-clamp-2">
-                        A team of explorers travel through a wormhole in space in an attempt to ensure humanity&apos;s survival.
-                    </p>
+            {/* Trending Row */}
+            <div className="flex-shrink-0 flex flex-col mt-2">
+                <div className="flex items-center justify-between mb-3 px-1">
+                    <h3 className="text-xs font-bold flex items-center gap-1.5 text-white/90 tracking-wide">
+                        <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
+                        Trending This Week
+                    </h3>
+                    <button className="text-[10px] font-medium text-white/40 hover:text-white/80 transition-colors flex items-center gap-0.5">
+                        See all <ChevronRight className="w-3 h-3" />
+                    </button>
                 </div>
 
-                {/* Status */}
-                <div>
-                    <span className="text-[8px] uppercase tracking-widest text-white/25 font-semibold">Status</span>
-                    <div className="flex items-center gap-1.5 mt-1.5">
-                        {statuses.map((s, i) => {
-                            const isCurrent = i === Math.min(step, 2);
-                            const isActive = i <= Math.min(step, 2);
-                            return (
-                                <motion.div key={s.label}
-                                    animate={{ scale: isCurrent ? 1.05 : 1, opacity: isActive ? 1 : 0.35 }}
-                                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-medium ${isCurrent ? `${s.bg} ${s.color} ring-1 ring-current/20` : "text-white/30"}`}>
-                                    <s.icon className="h-2.5 w-2.5" />
-                                    {s.label}
-                                </motion.div>
-                            );
-                        })}
-                    </div>
-                    <div className="flex items-center gap-0.5 mt-1.5">
-                        {[0, 1, 2].map((i) => (
-                            <motion.div key={i}
-                                animate={{ backgroundColor: i <= Math.min(step, 2) ? "#10B981" : "rgba(255,255,255,0.06)" }}
-                                className="h-0.5 flex-1 rounded-full" transition={{ duration: 0.3 }} />
-                        ))}
-                    </div>
-                </div>
-
-                {/* Fav + rating row */}
-                <div className="flex items-center gap-5">
-                    <div>
-                        <span className="text-[8px] uppercase tracking-widest text-white/25 font-semibold block mb-1">Favorite</span>
-                        <motion.div animate={{ scale: isFav ? [1, 1.3, 1] : 1 }} transition={{ duration: 0.4 }} className="relative">
-                            <div className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-300 ${isFav ? "bg-rose-500/20 ring-1 ring-rose-400/40 shadow-[0_0_16px_rgba(244,63,94,0.3)]" : "bg-white/[0.04] ring-1 ring-white/[0.08]"
-                                }`}>
-                                <Heart className={`h-3.5 w-3.5 transition-all duration-300 ${isFav ? "fill-rose-400 text-rose-400" : "text-white/25"}`} />
+                <div className="flex gap-3 overflow-x-hidden px-1">
+                    {trending.map((item, i) => (
+                        <motion.div
+                            key={"trending" + item.title + i}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.8 + i * 0.08, duration: 0.5, ease: "easeOut" }}
+                            className="flex-shrink-0 w-[95px] group cursor-pointer"
+                        >
+                            <div className="rounded-lg overflow-hidden border border-white/10 relative aspect-[2/3] mb-2 shadow-lg">
+                                <img src={item.poster} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[8px] font-bold text-white bg-white/20 backdrop-blur-md px-1.5 py-0.5 rounded uppercase">{item.type}</span>
+                                        <Heart className="w-3 h-3 text-white/70 hover:text-rose-400 hover:fill-rose-400 transition-colors" />
+                                    </div>
+                                </div>
                             </div>
-                            <AnimatePresence>
-                                {isFav && [...Array(6)].map((_, i) => (
-                                    <motion.div key={`b-${i}`}
-                                        initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
-                                        animate={{ opacity: 0, scale: 1, x: Math.cos((i * Math.PI * 2) / 6) * 16, y: Math.sin((i * Math.PI * 2) / 6) * 16 }}
-                                        exit={{ opacity: 0 }} transition={{ duration: 0.4 }}
-                                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-rose-400" />
-                                ))}
-                            </AnimatePresence>
+                            <h4 className="text-[11px] font-semibold text-white/80 truncate group-hover:text-white transition-colors">{item.title}</h4>
+                            <p className="text-[9px] text-white/40 mt-0.5">{item.genre}</p>
                         </motion.div>
-                    </div>
-                    <div>
-                        <span className="text-[8px] uppercase tracking-widest text-white/25 font-semibold block mb-1">Rating</span>
-                        <div className="flex items-center gap-0.5">
-                            {[1, 2, 3, 4, 5].map((s) => (
-                                <motion.div key={s}
-                                    animate={{ scale: s <= rating ? [1, 1.3, 1] : 1 }}
-                                    transition={{ duration: 0.25, delay: s <= rating ? (s - 1) * 0.05 : 0 }}>
-                                    <Star className={`h-3.5 w-3.5 transition-all duration-300 ${s <= rating ? "fill-amber-400 text-amber-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.5)]" : "text-white/15"
-                                        }`} />
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Activity */}
-                <div className="pt-2 border-t border-white/[0.04]">
-                    <span className="text-[8px] uppercase tracking-widest text-white/25 font-semibold block mb-1.5">Activity</span>
-                    <div className="space-y-1">
-                        {[
-                            { text: "Added to Wishlist", show: step >= 0 },
-                            { text: "Status → Pending", show: step >= 1 },
-                            { text: "Status → Watched", show: step >= 2 },
-                            { text: "Marked as Favorite", show: step >= 3 },
-                            { text: `Rated ${rating}/5 stars`, show: step >= 4 },
-                        ].filter(a => a.show).reverse().slice(0, 3).map((a, i) => (
-                            <motion.div key={a.text} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.2, delay: i * 0.04 }}
-                                className="flex items-center gap-2 text-[9px]">
-                                <div className="h-1 w-1 rounded-full bg-emerald-400/60 flex-shrink-0" />
-                                <span className="text-white/45">{a.text}</span>
-                            </motion.div>
-                        ))}
-                    </div>
+                    ))}
                 </div>
             </div>
         </div>
     );
 }
-
 /* ═══════════════════════════════════════════════════════
    MAIN COMPONENT — with auto-cycling cursor
    ═══════════════════════════════════════════════════════ */
@@ -524,36 +597,41 @@ function TrackingTab() {
 // Cursor positions as percentages (0-100) of container width/height.
 // This ensures the cursor lands correctly at any container size.
 const CURSOR_SCRIPT: { tab: TabId; px: number; py: number; delay: number; click?: boolean; posterHighlight?: number }[] = [
-    // Start: hover over first poster (Interstellar) — right side of sidebar
-    { tab: "library", px: 32, py: 48, delay: 0 },
-    { tab: "library", px: 32, py: 48, delay: 800, posterHighlight: 0 },
-    // Move to second poster (Breaking Bad)
-    { tab: "library", px: 45, py: 48, delay: 2500, posterHighlight: 1 },
-    // Move to third poster (Attack on Titan)
-    { tab: "library", px: 58, py: 48, delay: 4000, posterHighlight: 2 },
-    // Move cursor up to Dashboard tab (center of tab bar)
-    { tab: "library", px: 50, py: 12, delay: 5500 },
-    { tab: "dashboard", px: 50, py: 12, delay: 6200, click: true },
-    // Explore dashboard — hover over insights area
-    { tab: "dashboard", px: 35, py: 35, delay: 7500 },
+    // --- DASHBOARD (0 - 5.5s) ---
+    // Start in Dashboard: hover over insights area
+    { tab: "dashboard", px: 35, py: 35, delay: 0 },
     // Hover over KPI cards area
-    { tab: "dashboard", px: 65, py: 50, delay: 9500 },
-    // Move cursor up to Tracking tab
-    { tab: "dashboard", px: 78, py: 12, delay: 11500 },
-    { tab: "tracking", px: 78, py: 12, delay: 12200, click: true },
-    // Explore tracking — hover over poster area
-    { tab: "tracking", px: 30, py: 45, delay: 13500 },
+    { tab: "dashboard", px: 65, py: 50, delay: 2000 },
+    // Move cursor up to Library tab (center of tab bar)
+    { tab: "dashboard", px: 50, py: 12, delay: 4000 },
+    { tab: "library", px: 50, py: 12, delay: 4700, click: true },
+
+    // --- LIBRARY (4.7s - 12.5s) ---
+    // Move to first poster (Interstellar)
+    { tab: "library", px: 32, py: 48, delay: 5500 },
+    { tab: "library", px: 32, py: 48, delay: 6000, posterHighlight: 0 },
+    // Move to second poster (Breaking Bad)
+    { tab: "library", px: 45, py: 48, delay: 7500, posterHighlight: 1 },
+    // Move to third poster (Attack on Titan)
+    { tab: "library", px: 58, py: 48, delay: 9000, posterHighlight: 2 },
+    // Move cursor up to Discovery tab (right side)
+    { tab: "library", px: 78, py: 12, delay: 10500 },
+    { tab: "discovery", px: 78, py: 12, delay: 11200, click: true },
+
+    // --- DISCOVERY (11.2s - 21s) ---
+    // Explore discovery — hover over poster area
+    { tab: "discovery", px: 30, py: 45, delay: 12500 },
     // Hover over status/rating area
-    { tab: "tracking", px: 60, py: 60, delay: 16000 },
-    // Move cursor up to Library tab to restart
-    { tab: "tracking", px: 22, py: 12, delay: 19000 },
-    { tab: "library", px: 22, py: 12, delay: 19700, click: true },
+    { tab: "discovery", px: 60, py: 60, delay: 15000 },
+    // Move cursor up to Dashboard tab (left side) to restart
+    { tab: "discovery", px: 22, py: 12, delay: 18000 },
+    { tab: "dashboard", px: 22, py: 12, delay: 18700, click: true },
 ];
 
-const CYCLE_DURATION = 21000; // total cycle ms
+const CYCLE_DURATION = 20000; // total cycle ms
 
 export default function DemoCard() {
-    const [activeTab, setActiveTab] = useState<TabId>("library");
+    const [activeTab, setActiveTab] = useState<TabId>("dashboard");
     const [cursorPos, setCursorPos] = useState({ x: 200, y: 200 });
     const [clicking, setClicking] = useState(false);
     const [highlightPoster, setHighlightPoster] = useState<number | null>(null);
@@ -675,7 +753,7 @@ export default function DemoCard() {
                         >
                             {activeTab === "library" && <LibraryTab highlightPoster={highlightPoster} />}
                             {activeTab === "dashboard" && <DashboardTab />}
-                            {activeTab === "tracking" && <TrackingTab />}
+                            {activeTab === "discovery" && <DiscoveryTab />}
                         </motion.div>
                     </AnimatePresence>
                 </div>

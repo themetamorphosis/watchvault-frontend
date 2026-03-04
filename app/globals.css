@@ -522,7 +522,8 @@ body {
   max-width: 1200px;
   width: 100%;
   padding: 14px 12px 14px 18px;
-  border-radius: 16px;
+  border-radius: 9999px;
+  /* Updated to pill shape */
   background: rgba(18, 18, 20, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(24px) saturate(180%);
@@ -551,7 +552,8 @@ body {
   display: inline-flex;
   align-items: center;
   padding: 9px 22px;
-  border-radius: 12px;
+  border-radius: 9999px;
+  /* Updated to pill shape */
   font-size: 14px;
   font-weight: 600;
   color: #0a0a0a;
@@ -589,7 +591,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 14px;
+  border-radius: 9999px;
+  /* Updated to pill shape */
   padding: 14px 32px;
   font-size: 15px;
   font-weight: 600;
@@ -657,7 +660,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 14px;
+  border-radius: 9999px;
+  /* Updated to pill shape */
   padding: 14px 32px;
   font-size: 15px;
   font-weight: 500;

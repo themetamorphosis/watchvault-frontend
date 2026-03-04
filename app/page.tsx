@@ -33,7 +33,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-const HeroBackground = dynamic(() => import("@/components/HeroBackground"), {
+const Beams = dynamic(() => import("@/components/Beams"), {
   ssr: false,
 });
 
@@ -402,21 +402,31 @@ export default function HomePage() {
         className="relative flex min-h-screen flex-col"
       >
         {/* Animated WebGL background + overlays */}
-        <HeroBackground />
+        <div className="absolute inset-0 z-0">
+          <Beams
+            beamWidth={3}
+            beamHeight={30}
+            beamNumber={20}
+            lightColor="#ffffff"
+            speed={2}
+            noiseIntensity={1.75}
+            scale={0.2}
+            rotation={30}
+          />
+        </div>
         <div className="aurora-vignette" />
         <div className="noise-overlay" />
-        <FloatingOrbs variant="hero" />
 
         {/* Hero content — pushed lower to balance visual weight */}
-        <div className="relative z-10 flex flex-1 items-end justify-center px-6 sm:px-10 pb-24 sm:pb-32 pt-32 sm:pt-40">
-          <div className="text-center max-w-4xl mx-auto">
+        <div className="relative z-10 flex flex-1 items-center justify-center px-6 sm:px-10 pb-12 sm:pb-16 pt-24 sm:pt-40">
+          <div className="text-center max-w-4xl mx-auto mt-4 sm:mt-8">
             {/* Status badge */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full liquid-glass liquid-glass-pill text-xs sm:text-sm text-white/55 mb-10">
+              <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full liquid-glass liquid-glass-pill text-xs sm:text-sm text-white/55 mb-8">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
@@ -484,7 +494,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-9 sm:mt-12 flex flex-wrap justify-center gap-4"
+              className="mt-6 sm:mt-8 flex flex-wrap justify-center gap-4"
             >
               <Link href={session ? "/dashboard" : "/login"} className="glass-btn-primary">
                 <span>{session ? "Go to Dashboard" : "Get Started Free"}</span>
@@ -494,28 +504,30 @@ export default function HomePage() {
                 <ChevronDown className="h-4 w-4 ml-1.5 opacity-60" />
               </button>
             </motion.div>
-
-            {/* Quick highlights row */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1, duration: 0.8 }}
-              className="mt-14 flex flex-wrap justify-center gap-6 sm:gap-8"
-            >
-              {HIGHLIGHTS.map((h, i) => (
-                <motion.div
-                  key={h.text}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.1 + i * 0.1, duration: 0.5 }}
-                  className="flex items-center gap-2 text-xs sm:text-sm text-white/30"
-                >
-                  <h.icon className="h-3.5 w-3.5 text-white/25" />
-                  {h.text}
-                </motion.div>
-              ))}
-            </motion.div>
           </div>
+        </div>
+
+        {/* Quick highlights row - moved here to stay anchored at bottom */}
+        <div className="relative z-10 w-full pb-10 sm:pb-12 text-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 0.8 }}
+            className="flex flex-wrap justify-center gap-6 sm:gap-8"
+          >
+            {HIGHLIGHTS.map((h, i) => (
+              <motion.div
+                key={h.text}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.1 + i * 0.1, duration: 0.5 }}
+                className="flex items-center gap-2 text-xs sm:text-sm text-white/30"
+              >
+                <h.icon className="h-3.5 w-3.5 text-white/25" />
+                {h.text}
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
 
         {/* Scroll indicator */}

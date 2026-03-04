@@ -95,7 +95,7 @@ export default function TopNavBar() {
         if (!parent) return;
         const parentRect = parent.getBoundingClientRect();
         const elRect = el.getBoundingClientRect();
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         setPillStyle({
             left: elRect.left - parentRect.left,
             width: elRect.width,
