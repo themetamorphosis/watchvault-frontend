@@ -88,7 +88,7 @@ export default function ExpandableCardOverlay({
             />
 
             {/* Panel container */}
-            <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none overscroll-contain">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none overscroll-contain p-4 pt-24 sm:p-0">
                 {/* Animated card */}
                 <motion.div
                     ref={panelRef}
@@ -99,15 +99,15 @@ export default function ExpandableCardOverlay({
                     transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                     className="
                         pointer-events-auto
-                        relative w-[95vw] max-w-[900px] max-h-[90vh] sm:h-[70vh] sm:min-h-[600px] sm:max-h-[850px]
-                        grid grid-cols-1 sm:grid-cols-[430px_1fr]
+                        relative w-full max-w-[900px] h-full max-h-[85vh] sm:h-[70vh] sm:min-h-[600px] sm:max-h-[850px]
+                        flex flex-col sm:grid sm:grid-cols-[430px_1fr]
                         rounded-3xl overflow-hidden
                         liquid-glass border border-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06)_inset] shadow-2xl
                     "
                     style={{ willChange: "transform, opacity" }}
                 >
                     {/* Left Column: Poster */}
-                    <div className="relative h-[40vh] sm:h-full w-full [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)] sm:[mask-image:linear-gradient(to_right,black_60%,transparent_100%)]">
+                    <div className="relative shrink-0 h-[45vh] sm:h-full w-full [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)] sm:[mask-image:linear-gradient(to_right,black_60%,transparent_100%)]">
                         {item.coverUrl ? (
                             <img
                                 src={item.coverUrl}
@@ -124,11 +124,11 @@ export default function ExpandableCardOverlay({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1, transition: { delay: 0.15, duration: 0.3 } }}
                         exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                        className="flex flex-col p-8 gap-5 overflow-y-auto w-full relative h-full bg-transparent"
+                        className="flex flex-col p-5 sm:p-8 gap-4 sm:gap-5 overflow-y-auto w-full relative h-full flex-1 min-h-0 bg-transparent"
                         style={{ scrollbarWidth: "none" }}
                     >
                         {/* Top Right Actions */}
-                        <div className="absolute top-6 right-6 flex items-center gap-2">
+                        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 z-10">
                             <motion.button
                                 onClick={(e) => { e.stopPropagation(); onEdit(); }}
                                 whileHover={{ scale: 1.05 }}
@@ -163,27 +163,30 @@ export default function ExpandableCardOverlay({
                         </div>
 
                         {/* Content Readability Wrapper */}
-                        <div className="mt-8 pr-16 bg-transparent">
-                            <div className="flex items-start gap-4">
+                        <div className="mt-2 sm:mt-8 pr-0 sm:pr-16 bg-transparent">
+                            <div className="hidden sm:block">
+                                {/* Desktop Title (Animated) */}
                                 <motion.h2
-                                    layoutId={`title-${layoutId}`}
-                                    className="text-3xl font-semibold tracking-tight text-white leading-tight flex-1"
+                                    layoutId={typeof window !== 'undefined' && window.innerWidth >= 640 ? `title-${layoutId}` : undefined}
+                                    className="text-3xl font-semibold tracking-tight text-white leading-tight"
                                 >
                                     {item.title}
                                 </motion.h2>
+                            </div>
+
+                            <div className="flex items-center gap-3 mt-0 sm:mt-3">
+                                <div className="text-sm text-white/70 font-medium">
+                                    {metaString}
+                                </div>
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onFav();
                                     }}
-                                    className="mt-1.5 shrink-0 text-white/50 hover:text-white transition-colors"
+                                    className="shrink-0 text-white/50 hover:text-white transition-colors"
                                 >
-                                    <Star className={`h-6 w-6 ${item.favorite ? "fill-white text-white" : ""}`} />
+                                    <Star className={`h-5 w-5 sm:h-6 sm:w-6 ${item.favorite ? "fill-white text-white" : ""}`} />
                                 </button>
-                            </div>
-
-                            <div className="text-sm text-white/70 mt-3 font-medium">
-                                {metaString}
                             </div>
 
                             {/* Description */}

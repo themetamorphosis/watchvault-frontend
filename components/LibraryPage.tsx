@@ -151,7 +151,7 @@ function GlassSelect<T extends string>({
 const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, accent: '#A855F7' },
   { href: '/library/movies', label: 'Movies', icon: Film, accent: '#FF3864' },
-  { href: '/library/tv', label: 'TV Shows', icon: Tv, accent: '#A855F7' },
+  { href: '/library/tv', label: <><span className="sm:hidden">TV</span><span className="hidden sm:inline">TV Shows</span></>, icon: Tv, accent: '#A855F7' },
   { href: '/library/anime', label: 'Anime', icon: Sparkles, accent: '#38BDF8' },
 ];
 
@@ -188,8 +188,23 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
   const [importOpen, setImportOpen] = useState(false);
   const [expandedItem, setExpandedItem] = useState<Item | null>(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('wv-sidebar-open');
+        if (stored !== null) return stored === 'true';
+      } catch { }
+    }
+    return true;
+  });
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+
+  // Save sidebar state whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('wv-sidebar-open', String(sidebarOpen));
+    } catch { }
+  }, [sidebarOpen]);
   const addMenuRef = useRef<HTMLDivElement>(null);
 
   useOutsideClick(addMenuRef, () => {
@@ -622,7 +637,8 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
                         )}
                         <span className="relative z-10 flex items-center gap-2">
                           <tab.icon className="h-4 w-4" />
-                          {tab.label}
+                          <span className="hidden sm:inline">{tab.label}</span>
+                          <span className="sm:hidden">{tab.label === 'TV Shows' ? 'TV' : tab.label}</span>
                         </span>
                       </Link>
                     );
@@ -742,28 +758,7 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
             )}
           </div>
 
-          {/* Mobile-only: status filter pills (visible below lg) */}
-          <div className="lg:hidden mb-6">
-            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pb-1">
-              {STATUS_TABS.map((tab) => {
-                const isActive = status === tab.value;
-                const count = statusCounts[tab.value] ?? 0;
-                return (
-                  <button
-                    key={tab.value}
-                    onClick={() => setStatus(tab.value)}
-                    className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-all duration-200 border ${isActive
-                      ? 'bg-white/[0.08] text-white border-white/10'
-                      : 'text-white/40 hover:text-white/65 border-transparent'
-                      }`}
-                  >
-                    {tab.label}
-                    <span className={`text-[10px] ${isActive ? 'text-white/50' : 'text-white/25'}`}>{count}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+
 
           {/* ━━━ MEDIA GRID ━━━ */}
           <LayoutGroup id="media-grid">
