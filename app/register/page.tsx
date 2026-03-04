@@ -64,9 +64,12 @@ export default function RegisterPage() {
                         transition={{ duration: 0.6, delay: 0.15 }}
                         className="text-center mb-8"
                     >
-                        <Link href="/" className="inline-block mb-6">
+                        <Link href="/" className="inline-flex items-center gap-1.5 mb-6">
                             <span className="text-xl font-semibold tracking-tight text-white/90">
                                 WatchVault
+                            </span>
+                            <span className="text-base font-normal tracking-tight text-white/40">
+                                Personal
                             </span>
                         </Link>
                         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gradient mb-2">
@@ -183,7 +186,7 @@ export default function RegisterPage() {
                                         <motion.div
                                             animate={{ rotate: 360 }}
                                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                            className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full"
+                                            className="h-4 w-4 border-2 border-black/20 border-t-black/70 rounded-full"
                                         />
                                         <span>Creating account...</span>
                                     </>

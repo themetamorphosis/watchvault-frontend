@@ -10,7 +10,7 @@ import {
   useTransform,
   AnimatePresence,
 } from "framer-motion";
-import { usePathname } from "next/navigation";
+
 import { useSession } from "@/components/SessionProvider";
 import CountUp from "react-countup";
 import {
@@ -18,7 +18,6 @@ import {
   Tv,
   Sparkles,
   ChevronDown,
-  ArrowRight,
   Heart,
   Clock,
   Star,
@@ -29,6 +28,9 @@ import {
   Play,
   Bookmark,
   TrendingUp,
+  Search,
+  BarChart3,
+  CheckCircle2,
 } from "lucide-react";
 
 const HeroBackground = dynamic(() => import("@/components/HeroBackground"), {
@@ -206,40 +208,37 @@ function StaggerHeadline({ text, className = "" }: { text: string; className?: s
   );
 }
 
-/* ─── Navigation ─── */
+/* ─── Navigation (in-page anchors) ─── */
 const NAV = [
-  { href: "/movies", label: "Movies", icon: Film },
-  { href: "/tv", label: "TV", icon: Tv },
-  { href: "/anime", label: "Anime", icon: Sparkles },
+  { href: "#features", label: "Features" },
+  { href: "#demo", label: "Demo" },
+  { href: "#organize", label: "Organize" },
 ];
 
-/* ─── Feature cards data ─── */
+/* ─── Feature cards data — capabilities, not categories ─── */
 const FEATURES = [
   {
-    icon: Film,
-    title: "Movies",
-    desc: "From blockbusters to indie gems. Track every film you watch, want to watch, or love.",
+    icon: CheckCircle2,
+    title: "Smart Tracking",
+    desc: "Track watched, pending, wishlist & favorites across movies, TV shows and anime — all in one place.",
     gradient: "from-rose-500/20 to-pink-500/10",
     iconColor: "text-rose-400",
-    href: "/movies",
     accentColor: "rgba(255, 56, 100, 0.15)",
   },
   {
-    icon: Tv,
-    title: "TV Shows",
-    desc: "Episode by episode, season by season. Never lose track of where you left off.",
+    icon: BarChart3,
+    title: "Rich Insights",
+    desc: "Dashboard with real-time charts, viewing stats, and analytics to understand your media journey.",
     gradient: "from-violet-500/20 to-purple-500/10",
     iconColor: "text-violet-400",
-    href: "/tv",
     accentColor: "rgba(168, 85, 247, 0.15)",
   },
   {
-    icon: Sparkles,
-    title: "Anime",
-    desc: "Sub or dub, your call. Organize your anime journey from start to finish.",
+    icon: Search,
+    title: "TMDB Integration",
+    desc: "Search millions of titles instantly. Posters, metadata and ratings are auto-filled from TMDB.",
     gradient: "from-cyan-500/20 to-blue-500/10",
     iconColor: "text-cyan-400",
-    href: "/anime",
     accentColor: "rgba(56, 189, 248, 0.15)",
   },
 ];
@@ -285,9 +284,13 @@ const HIGHLIGHTS = [
 ];
 
 export default function HomePage() {
-  const pathname = usePathname();
-  const active = NAV.find((n) => pathname?.startsWith(n.href))?.href ?? "";
   const { data: session } = useSession();
+  const featuresRef = useRef<HTMLDivElement>(null);
+
+  const scrollToSection = useCallback((id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -310,6 +313,88 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-screen w-full bg-[#050505] text-white overflow-hidden">
+      {/* ─── Raycast-style floating capsule nav (OUTSIDE hero for correct fixed positioning) ─── */}
+      <motion.header
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+        className="fixed top-0 left-0 right-0 z-50 flex justify-center px-5 sm:px-6 pt-3 sm:pt-4"
+      >
+        <nav className="wv-capsule-nav">
+          {/* Logo */}
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 flex-shrink-0 mr-2 sm:mr-6"
+          >
+            <span className="text-[17px] font-bold tracking-tight text-white/90">
+              WatchVault
+            </span>
+            <span className="text-[15px] font-normal tracking-tight text-white/40">
+              Personal
+            </span>
+          </Link>
+
+          {/* Center nav links — desktop */}
+          <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
+            {NAV.map((l) => (
+              <button
+                key={l.href}
+                onClick={() => scrollToSection(l.href.replace("#", ""))}
+                className="px-4 lg:px-5 py-2 text-sm font-medium text-white/50 hover:text-white/90 transition-colors duration-200 select-none rounded-lg hover:bg-white/[0.06]"
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Right side: auth */}
+          <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0 ml-auto md:ml-0">
+            {session ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="text-sm font-medium text-white/50 hover:text-white/90 transition-colors duration-200 hidden sm:block"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="wv-capsule-cta"
+                  style={{ background: 'rgba(255,255,255,0.92)', color: '#0a0a0a', border: '1px solid rgba(255,255,255,0.25)' }}
+                >
+                  <span className="relative inline-flex items-center justify-center h-5.5 w-5.5 rounded-full overflow-hidden border border-white/15 flex-shrink-0 mr-2">
+                    {session.user?.image ? (
+                      <img
+                        src={session.user.image}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="h-full w-full flex items-center justify-center bg-gradient-to-br from-rose-500/40 to-violet-500/40 text-[10px] font-bold">
+                        {session.user?.name?.[0]?.toUpperCase() || "U"}
+                      </span>
+                    )}
+                  </span>
+                  Dashboard
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-sm font-medium text-white/50 hover:text-white/90 transition-colors duration-200 hidden sm:block"
+                >
+                  Log in
+                </Link>
+                <Link href="/register" className="wv-capsule-cta" style={{ background: 'rgba(255,255,255,0.92)', color: '#0a0a0a', border: '1px solid rgba(255,255,255,0.25)' }}>
+                  Get Started
+                </Link>
+              </>
+            )}
+          </div>
+        </nav>
+      </motion.header>
+
       {/* ━━━ HERO (fullscreen) ━━━ */}
       <motion.section
         ref={heroRef}
@@ -322,132 +407,8 @@ export default function HomePage() {
         <div className="noise-overlay" />
         <FloatingOrbs variant="hero" />
 
-        {/* Nav */}
-        <header className="relative z-20 w-full px-6 sm:px-10 py-5">
-          <div className="mx-auto w-full max-w-[1400px]">
-            <div className="grid grid-cols-2 md:grid-cols-3 items-center">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="justify-self-start"
-              >
-                <Link
-                  href="/"
-                  className="text-base sm:text-lg font-semibold tracking-tight text-white/90 hover:text-white transition-colors duration-300"
-                >
-                  WatchVault
-                  <span className="ml-2 text-white/30 font-normal text-sm">
-                    Personal
-                  </span>
-                </Link>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="hidden md:flex justify-self-center"
-              >
-                <div className="liquid-glass liquid-glass-pill liquid-glass-hover liquid-glass-press px-1.5 py-1.5">
-                  <div className="relative flex items-center gap-1">
-                    {active && (
-                      <motion.div
-                        layoutId="wv-nav-pill"
-                        className="absolute top-0 bottom-0 my-1 rounded-full bg-white/[0.14]"
-                        style={{
-                          left:
-                            active === "/movies"
-                              ? 0
-                              : active === "/tv"
-                                ? "33.3333%"
-                                : "66.6666%",
-                          width: "33.3333%",
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 420,
-                          damping: 32,
-                        }}
-                      />
-                    )}
-
-                    {NAV.map((l) => (
-                      <Link
-                        key={l.href}
-                        href={l.href}
-                        className="relative z-10 rounded-full px-5 py-2 text-sm font-medium tracking-tight text-white/75 hover:text-white hover:bg-white/[0.08] transition-all duration-300 select-none"
-                      >
-                        {l.label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="justify-self-end"
-              >
-                {session ? (
-                  <Link
-                    href="/dashboard"
-                    className="liquid-glass liquid-glass-pill liquid-glass-hover liquid-glass-press pl-2 pr-5 py-1.5 text-sm font-medium tracking-tight flex items-center gap-2.5"
-                  >
-                    <span className="relative inline-flex items-center justify-center h-8 w-8 rounded-full overflow-hidden border border-white/10 flex-shrink-0">
-                      {session.user?.image ? (
-                        <img
-                          src={session.user.image}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <span className="h-full w-full flex items-center justify-center bg-gradient-to-br from-rose-500/30 to-violet-500/30 text-xs font-semibold">
-                          {session.user?.name?.[0]?.toUpperCase() || "U"}
-                        </span>
-                      )}
-                    </span>
-                    <span className="relative">Dashboard</span>
-                  </Link>
-                ) : (
-                  <Link
-                    href="/login"
-                    className="liquid-glass liquid-glass-pill liquid-glass-hover liquid-glass-press px-5 py-2.5 text-sm font-medium tracking-tight"
-                  >
-                    <span className="relative">Sign In</span>
-                  </Link>
-                )}
-              </motion.div>
-            </div>
-
-            {/* Mobile nav */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="mt-4 md:hidden"
-            >
-              <div className="liquid-glass liquid-glass-pill px-1.5 py-1.5">
-                <div className="flex items-center justify-between gap-1">
-                  {NAV.map((l) => (
-                    <Link
-                      key={l.href}
-                      href={l.href}
-                      className="flex-1 text-center rounded-full px-3 py-2 text-sm font-medium tracking-tight text-white/75 hover:text-white hover:bg-white/[0.08] transition-all duration-300"
-                    >
-                      {l.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </header>
-
-        {/* Hero content — centered */}
-        <div className="relative z-10 flex flex-1 items-center justify-center px-6 sm:px-10">
+        {/* Hero content — pushed lower to balance visual weight */}
+        <div className="relative z-10 flex flex-1 items-end justify-center px-6 sm:px-10 pb-24 sm:pb-32 pt-32 sm:pt-40">
           <div className="text-center max-w-4xl mx-auto">
             {/* Status badge */}
             <motion.div
@@ -518,7 +479,7 @@ export default function HomePage() {
               <span className="text-white/65 font-medium">Clean. Fast. Yours.</span>
             </motion.p>
 
-            {/* CTA buttons — liquid glass */}
+            {/* CTA buttons — single strong CTA + scroll secondary */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -526,11 +487,12 @@ export default function HomePage() {
               className="mt-9 sm:mt-12 flex flex-wrap justify-center gap-4"
             >
               <Link href={session ? "/dashboard" : "/login"} className="glass-btn-primary">
-                <span>{session ? "Go to Dashboard" : "Get Started"}</span>
+                <span>{session ? "Go to Dashboard" : "Get Started Free"}</span>
               </Link>
-              <Link href="/tv" className="glass-btn-secondary">
-                <span>Browse TV Shows</span>
-              </Link>
+              <button onClick={() => scrollToSection("features")} className="glass-btn-secondary">
+                <span>See how it works</span>
+                <ChevronDown className="h-4 w-4 ml-1.5 opacity-60" />
+              </button>
             </motion.div>
 
             {/* Quick highlights row */}
@@ -588,7 +550,7 @@ export default function HomePage() {
       </section>
 
       {/* ━━━ DEMO CARD ━━━ */}
-      <section className="relative py-24 sm:py-32 px-6 sm:px-10 overflow-hidden">
+      <section id="demo" className="relative py-24 sm:py-32 px-6 sm:px-10 overflow-hidden scroll-mt-8">
         <div className="section-divider mb-24 sm:mb-32" />
         <div className="mx-auto max-w-[1400px]">
           <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
@@ -644,23 +606,23 @@ export default function HomePage() {
       </section>
 
       {/* ━━━ BENTO FEATURE GRID ━━━ */}
-      <section className="relative py-24 sm:py-32 px-6 sm:px-10">
+      <section id="features" ref={featuresRef} className="relative py-24 sm:py-32 px-6 sm:px-10 scroll-mt-8">
         <div className="mx-auto max-w-[1400px]">
           <Reveal>
             <p className="text-xs font-semibold text-white/35 tracking-[0.2em] uppercase mb-4">
-              Categories
+              Why WatchVault
             </p>
           </Reveal>
           <Reveal delay={0.05}>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-16">
-              Everything in one place.
+              Everything you need, nothing you don&apos;t.
             </h2>
           </Reveal>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f, i) => (
               <BentoCard key={f.title} delay={i * 0.12}>
-                <Link href={f.href} className="block group p-7 sm:p-8 h-full">
+                <div className="group p-7 sm:p-8 h-full">
                   {/* Floating icon */}
                   <motion.div
                     whileHover={{ scale: 1.1, rotate: 5 }}
@@ -677,23 +639,7 @@ export default function HomePage() {
                   <p className="text-sm text-white/40 leading-relaxed group-hover:text-white/55 transition-colors duration-500">
                     {f.desc}
                   </p>
-
-                  {/* Animated arrow */}
-                  <div className="mt-7 flex items-center gap-2 text-sm font-medium text-white/25 group-hover:text-white/60 transition-all duration-300">
-                    Explore
-                  </div>
-
-                  {/* Bottom accent line */}
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] overflow-hidden">
-                    <motion.div
-                      className="h-full"
-                      style={{ background: f.accentColor }}
-                      initial={{ scaleX: 0 }}
-                      whileHover={{ scaleX: 1 }}
-                      transition={{ duration: 0.4 }}
-                    />
-                  </div>
-                </Link>
+                </div>
               </BentoCard>
             ))}
           </div>
@@ -713,7 +659,7 @@ export default function HomePage() {
       </section>
 
       {/* ━━━ SHOWCASE: List Types ━━━ */}
-      <section className="relative py-24 sm:py-32 px-6 sm:px-10 overflow-hidden">
+      <section id="organize" className="relative py-24 sm:py-32 px-6 sm:px-10 overflow-hidden scroll-mt-8">
         <div className="section-divider mb-24 sm:mb-32" />
 
         {/* Subtle bg orbs */}
@@ -854,15 +800,43 @@ export default function HomePage() {
         <div className="mx-auto max-w-[1400px] flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/25">
           <span>© 2026 WatchVault</span>
           <div className="flex items-center gap-6">
-            {NAV.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="hover:text-white/55 transition-colors duration-300"
-              >
-                {l.label}
-              </Link>
-            ))}
+            {session ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="hover:text-white/55 transition-colors duration-300"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/library/movies"
+                  className="hover:text-white/55 transition-colors duration-300"
+                >
+                  Library
+                </Link>
+                <Link
+                  href="/profile"
+                  className="hover:text-white/55 transition-colors duration-300"
+                >
+                  Profile
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="hover:text-white/55 transition-colors duration-300"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="hover:text-white/55 transition-colors duration-300"
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </footer>

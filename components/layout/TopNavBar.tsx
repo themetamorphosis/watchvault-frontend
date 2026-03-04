@@ -109,13 +109,13 @@ export default function TopNavBar() {
                     {/* ── Left: Logo ── */}
                     <Link
                         href="/"
-                        className="flex items-center gap-2.5 mr-4 flex-shrink-0"
+                        className="flex items-center gap-1.5 mr-4 flex-shrink-0"
                     >
-                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-rose-500/30 to-violet-500/30 border border-white/10 flex items-center justify-center">
-                            <span className="text-sm font-bold text-white/90">W</span>
-                        </div>
-                        <span className="text-[15px] font-semibold tracking-tight text-white/90 hidden sm:inline">
+                        <span className="text-[17px] font-bold tracking-tight text-white/90">
                             WatchVault
+                        </span>
+                        <span className="text-[15px] font-normal tracking-tight text-white/40">
+                            Personal
                         </span>
                     </Link>
 
