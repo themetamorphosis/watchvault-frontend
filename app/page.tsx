@@ -31,6 +31,8 @@ import {
   Search,
   BarChart3,
   CheckCircle2,
+  Menu,
+  X,
 } from "lucide-react";
 
 const Beams = dynamic(() => import("@/components/Beams"), {
@@ -286,6 +288,7 @@ const HIGHLIGHTS = [
 export default function HomePage() {
   const { data: session } = useSession();
   const featuresRef = useRef<HTMLDivElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const scrollToSection = useCallback((id: string) => {
     const el = document.getElementById(id);
@@ -347,8 +350,8 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Right side: auth */}
-          <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0 ml-auto md:ml-0">
+          {/* Right side: auth — desktop */}
+          <div className="hidden md:flex items-center gap-3 sm:gap-4 flex-shrink-0 ml-auto md:ml-0">
             {session ? (
               <>
                 <Link
@@ -392,8 +395,93 @@ export default function HomePage() {
               </>
             )}
           </div>
+
+          {/* Mobile hamburger button */}
+          <button
+            className="md:hidden flex items-center gap-2 ml-auto px-3 py-2 rounded-full bg-white/[0.07] border border-white/[0.10] text-white/70 hover:text-white hover:bg-white/[0.12] transition-all duration-200"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              {mobileMenuOpen ? (
+                <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
+                  <X className="h-4 w-4" />
+                </motion.div>
+              ) : (
+                <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
+                  <Menu className="h-4 w-4" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </button>
         </nav>
       </motion.header>
+
+      {/* Mobile dropdown menu — rendered outside header so the capsule nav doesn't expand */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="md:hidden fixed top-[60px] left-0 right-0 z-50 flex justify-center px-5"
+          >
+            <div className="w-full max-w-[1200px] mt-2 rounded-2xl bg-[rgba(18,18,20,0.92)] border border-white/[0.10] backdrop-blur-2xl shadow-[0_16px_48px_rgba(0,0,0,0.5)] overflow-hidden">
+              <div className="p-4 flex flex-col gap-1">
+                {NAV.map((l) => (
+                  <button
+                    key={l.href}
+                    onClick={() => {
+                      scrollToSection(l.href.replace("#", ""));
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors duration-200"
+                  >
+                    {l.label}
+                  </button>
+                ))}
+                <div className="h-px bg-white/[0.06] my-2" />
+                {session ? (
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-white/80 hover:text-white hover:bg-white/[0.06] transition-colors duration-200"
+                  >
+                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-full overflow-hidden border border-white/15 flex-shrink-0">
+                      {session.user?.image ? (
+                        <img src={session.user.image} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="h-full w-full flex items-center justify-center bg-gradient-to-br from-rose-500/40 to-violet-500/40 text-[10px] font-bold">
+                          {session.user?.name?.[0]?.toUpperCase() || "U"}
+                        </span>
+                      )}
+                    </span>
+                    Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors duration-200"
+                    >
+                      Log in
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full text-center px-4 py-3 rounded-xl text-sm font-semibold bg-white/90 text-[#0a0a0a] hover:bg-white transition-colors duration-200"
+                    >
+                      Get Started
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ━━━ HERO (fullscreen) ━━━ */}
       <motion.section

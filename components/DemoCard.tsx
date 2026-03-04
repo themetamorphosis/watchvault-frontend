@@ -136,7 +136,7 @@ function LibraryTab({ highlightPoster }: { highlightPoster: number | null }) {
     return (
         <div className="flex gap-4 h-full">
             {/* ── Left sidebar ── */}
-            <div className="w-[140px] flex-shrink-0 space-y-4 border-r border-white/[0.05] pr-4">
+            <div className="hidden md:block w-[140px] flex-shrink-0 space-y-4 border-r border-white/[0.05] pr-4">
                 {/* Status filters */}
                 <div>
                     <span className="text-[10px] uppercase tracking-widest text-white/30 font-semibold">Status</span>
@@ -211,7 +211,7 @@ function LibraryTab({ highlightPoster }: { highlightPoster: number | null }) {
                 </div>
 
                 {/* Poster grid — 5 columns */}
-                <div className="grid grid-cols-5 gap-3">
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                     {POSTERS.slice(0, 10).map((item, i) => {
                         const st = STATUS_CONFIG[item.status];
                         const isHighlighted = highlightPoster === i;
@@ -694,8 +694,10 @@ export default function DemoCard() {
             <div className="demo-card-glow" />
             <div className="demo-card-highlight" />
 
-            {/* Animated cursor overlay */}
-            <DemoCursor x={cursorPos.x} y={cursorPos.y} clicking={clicking} />
+            {/* Animated cursor overlay — hidden on mobile */}
+            <div className="hidden md:block">
+                <DemoCursor x={cursorPos.x} y={cursorPos.y} clicking={clicking} />
+            </div>
 
             <div className="relative z-10 p-4 sm:p-5 flex flex-col h-full">
                 {/* Window chrome */}

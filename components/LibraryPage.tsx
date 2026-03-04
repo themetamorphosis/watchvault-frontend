@@ -843,6 +843,14 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
         onClose={() => setMobileFilterOpen(false)}
         activeFilter={status}
         onFilterChange={(newStatus: string) => setStatus(newStatus as Status | 'all')}
+        statusCounts={statusCounts}
+        onlyFav={onlyFav}
+        onToggleFav={() => setOnlyFav((v) => !v)}
+        sort={sort}
+        onSortChange={(v) => setSort(v as 'recent' | 'title' | 'year')}
+        genres={allGenres}
+        genreFilter={genreFilter}
+        onGenreFilterChange={setGenreFilter}
       />
 
       {/* ━━━ MODALS ━━━ */}

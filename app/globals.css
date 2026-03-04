@@ -922,6 +922,17 @@ body {
   opacity: 1;
 }
 
+/* Mobile: vertical demo card */
+@media (max-width: 767px) {
+  .demo-card-container {
+    aspect-ratio: 2 / 3;
+  }
+
+  .demo-card-container:hover {
+    transform: none;
+  }
+}
+
 /* ===== App Shell Top Header ===== */
 .app-header {
   position: sticky;
@@ -935,7 +946,7 @@ body {
 
 .app-header-inner {
   width: 100%;
-  padding: 0 32px;
+  padding: 0 14px;
   height: 64px;
   display: flex;
   align-items: center;
@@ -1417,7 +1428,7 @@ body {
 
 .drawer-panel {
   position: fixed;
-  top: 0;
+  top: 64px;
   left: 0;
   bottom: 0;
   z-index: 61;

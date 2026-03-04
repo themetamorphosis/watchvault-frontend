@@ -12,6 +12,8 @@ import {
     Users,
     User,
     LogOut,
+    Menu,
+    X,
 } from "lucide-react";
 import { useSession, signOut } from "@/components/SessionProvider";
 
@@ -28,6 +30,7 @@ export default function TopNavBar() {
     const pathname = usePathname();
     const { data: session } = useSession();
     const [profileOpen, setProfileOpen] = useState(false);
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const [toast, setToast] = useState<string | null>(null);
     const [toastExiting, setToastExiting] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
@@ -95,7 +98,7 @@ export default function TopNavBar() {
         if (!parent) return;
         const parentRect = parent.getBoundingClientRect();
         const elRect = el.getBoundingClientRect();
-         
+
         setPillStyle({
             left: elRect.left - parentRect.left,
             width: elRect.width,
@@ -119,8 +122,27 @@ export default function TopNavBar() {
                         </span>
                     </Link>
 
-                    {/* ── Center: Nav Tabs ── */}
-                    <nav className="flex-1 flex items-center justify-start sm:justify-center gap-0.5 overflow-x-auto scrollbar-hide px-2">
+                    {/* ── Mobile hamburger button ── */}
+                    <button
+                        className="md:hidden ml-auto flex items-center justify-center h-9 w-9 rounded-lg bg-white/[0.06] border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.10] transition-all duration-200 flex-shrink-0"
+                        onClick={() => setMobileNavOpen(!mobileNavOpen)}
+                        aria-label="Toggle navigation"
+                    >
+                        <AnimatePresence mode="wait" initial={false}>
+                            {mobileNavOpen ? (
+                                <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
+                                    <X className="h-4 w-4" />
+                                </motion.div>
+                            ) : (
+                                <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
+                                    <Menu className="h-4 w-4" />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </button>
+
+                    {/* ── Center: Nav Tabs (hidden on mobile) ── */}
+                    <nav className="hidden md:flex flex-1 items-center justify-start sm:justify-center gap-0.5 overflow-x-auto scrollbar-hide px-2">
                         <div className="relative flex items-center gap-0.5">
                             {/* Animated pill background — positioned via ref measurements */}
                             {pillStyle && (
@@ -236,6 +258,51 @@ export default function TopNavBar() {
                     </div>
                 </div>
             </header>
+
+            {/* Mobile nav drawer */}
+            <AnimatePresence>
+                {mobileNavOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                        className="md:hidden fixed top-[64px] left-0 right-0 z-40 overflow-hidden"
+                    >
+                        <div className="bg-[rgba(5,5,5,0.95)] border-b border-white/[0.06] backdrop-blur-2xl">
+                            <div className="px-4 py-3 flex flex-col gap-0.5">
+                                {NAV_TABS.map((tab) => {
+                                    const isActive = pathname === tab.href ||
+                                        (tab.href !== "/dashboard" && pathname?.startsWith(tab.href + "/")) ||
+                                        (tab.href === "/library" && pathname?.startsWith("/library"));
+                                    return (
+                                        <Link
+                                            key={tab.href}
+                                            href={tab.href === "/library" ? "/library/movies" : tab.href}
+                                            onClick={() => {
+                                                if (tab.comingSoon) handleComingSoonClick(tab.label);
+                                                setMobileNavOpen(false);
+                                            }}
+                                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 ${isActive
+                                                ? "text-white bg-white/[0.08]"
+                                                : "text-white/50 hover:text-white hover:bg-white/[0.04]"
+                                                }`}
+                                        >
+                                            <tab.icon className="h-4 w-4" />
+                                            <span>{tab.label}</span>
+                                            {tab.comingSoon && (
+                                                <span className="ml-auto text-[10px] uppercase tracking-wider text-white/25 font-medium">
+                                                    Coming Soon
+                                                </span>
+                                            )}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Toast */}
             <AnimatePresence>
