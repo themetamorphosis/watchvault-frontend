@@ -14,13 +14,26 @@ import {
     LogOut,
     Menu,
     X,
+    Film,
+    Tv,
+    Sparkles,
+    ChevronDown,
 } from "lucide-react";
 import { useSession, signOut } from "@/components/SessionProvider";
 
 /* ─── Primary Nav Tabs ─── */
 const NAV_TABS = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/library", label: "Library", icon: Library },
+    {
+        href: "/library",
+        label: "Library",
+        icon: Library,
+        subTabs: [
+            { href: '/library/movies', label: 'Movies', icon: Film },
+            { href: '/library/tv', label: 'TV Shows', icon: Tv },
+            { href: '/library/anime', label: 'Anime', icon: Sparkles },
+        ]
+    },
     { href: "/discovery", label: "Discovery", icon: Compass, comingSoon: true },
     { href: "/ai", label: "AI Agent", icon: Bot, comingSoon: true },
     { href: "/social", label: "Social", icon: Users, comingSoon: true },
@@ -35,6 +48,7 @@ export default function TopNavBar() {
     const [toastExiting, setToastExiting] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
     const toastShownRef = useRef<Set<string>>(new Set());
+    const navContainerRef = useRef<HTMLDivElement>(null);
     const tabRefs = useRef<(HTMLAnchorElement | null)[]>([]);
     const [pillStyle, setPillStyle] = useState<{
         left: number;
@@ -94,13 +108,13 @@ export default function TopNavBar() {
         }
         const el = tabRefs.current[activeIdx];
         if (!el) return;
-        const parent = el.parentElement;
-        if (!parent) return;
-        const parentRect = parent.getBoundingClientRect();
+        const container = navContainerRef.current;
+        if (!container) return;
+        const containerRect = container.getBoundingClientRect();
         const elRect = el.getBoundingClientRect();
 
         setPillStyle({
-            left: elRect.left - parentRect.left,
+            left: elRect.left - containerRect.left,
             width: elRect.width,
         });
     }, [activeIdx, pathname]);
@@ -142,8 +156,8 @@ export default function TopNavBar() {
                     </button>
 
                     {/* ── Center: Nav Tabs (hidden on mobile) ── */}
-                    <nav className="hidden md:flex flex-1 items-center justify-start sm:justify-center gap-0.5 overflow-x-auto scrollbar-hide px-2">
-                        <div className="relative flex items-center gap-0.5">
+                    <nav className="hidden md:flex flex-1 items-center justify-start sm:justify-center gap-0.5 px-2">
+                        <div ref={navContainerRef} className="relative flex items-center gap-0.5">
                             {/* Animated pill background — positioned via ref measurements */}
                             {pillStyle && (
                                 <motion.div
@@ -160,29 +174,55 @@ export default function TopNavBar() {
                             {NAV_TABS.map((tab, idx) => {
                                 const isActive = idx === activeIdx;
                                 return (
-                                    <Link
-                                        key={tab.href}
-                                        ref={(el) => {
-                                            tabRefs.current[idx] = el;
-                                        }}
-                                        href={
-                                            tab.href === "/library" ? "/library/movies" : tab.href
-                                        }
-                                        onClick={() => {
-                                            if (tab.comingSoon) handleComingSoonClick(tab.label);
-                                        }}
-                                        className={`nav-tab ${isActive ? "active" : ""}`}
-                                    >
-                                        <span className="flex items-center gap-1.5">
-                                            <tab.icon className="h-4 w-4" />
-                                            <span className="hidden md:inline">{tab.label}</span>
-                                        </span>
-                                        {tab.comingSoon && (
-                                            <span className="coming-soon-dot hidden md:block">
-                                                • Coming Soon
+                                    <div key={tab.href} className="relative group">
+                                        <Link
+                                            ref={(el) => {
+                                                tabRefs.current[idx] = el;
+                                            }}
+                                            href={
+                                                tab.href === "/library" ? "/library/movies" : tab.href
+                                            }
+                                            onClick={() => {
+                                                if (tab.comingSoon) handleComingSoonClick(tab.label);
+                                            }}
+                                            className={`nav-tab ${isActive ? "active" : ""}`}
+                                        >
+                                            <span className="flex items-center gap-1.5">
+                                                <tab.icon className="h-4 w-4" />
+                                                <span className="hidden md:inline">{tab.label}</span>
+                                                {tab.subTabs && <ChevronDown className="h-3 w-3 opacity-40 ml-0.5 group-hover:rotate-180 transition-transform duration-200" />}
                                             </span>
+                                            {tab.comingSoon && (
+                                                <span className="coming-soon-dot hidden md:block">
+                                                    • Coming Soon
+                                                </span>
+                                            )}
+                                        </Link>
+
+                                        {/* Dropdown Menu */}
+                                        {tab.subTabs && (
+                                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                                <div className="flex flex-col gap-1 p-1.5 min-w-[150px] rounded-2xl bg-[rgba(10,10,10,0.95)] backdrop-blur-xl border border-white/[0.08] shadow-2xl">
+                                                    {tab.subTabs.map(sub => {
+                                                        const isSubActive = pathname === sub.href;
+                                                        return (
+                                                            <Link
+                                                                key={sub.href}
+                                                                href={sub.href}
+                                                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isSubActive
+                                                                    ? "text-white bg-white/[0.08]"
+                                                                    : "text-white/50 hover:text-white hover:bg-white/[0.04]"
+                                                                    }`}
+                                                            >
+                                                                <sub.icon className="h-4 w-4" />
+                                                                {sub.label}
+                                                            </Link>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </div>
                                         )}
-                                    </Link>
+                                    </div>
                                 );
                             })}
                         </div>

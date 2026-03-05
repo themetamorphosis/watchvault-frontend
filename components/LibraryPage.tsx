@@ -20,18 +20,13 @@ import {
   Tv,
   Sparkles,
   Search,
-  Plus,
   Download,
-  ArrowLeft,
   Star,
   SlidersHorizontal,
   X,
-  LayoutDashboard,
-  ChevronDown,
   PanelLeftClose,
   PanelLeft,
 } from 'lucide-react';
-import { useOutsideClick } from '@/hooks/use-outside-click';
 
 /* ─── Types ─── */
 type SelectOption<T extends string> = { value: T; label: string };
@@ -147,13 +142,7 @@ function GlassSelect<T extends string>({
   );
 }
 
-/* ─── Nav links data ─── */
-const NAV_LINKS = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, accent: '#A855F7' },
-  { href: '/library/movies', label: 'Movies', icon: Film, accent: '#FF3864' },
-  { href: '/library/tv', label: <><span className="sm:hidden">TV</span><span className="hidden sm:inline">TV Shows</span></>, icon: Tv, accent: '#A855F7' },
-  { href: '/library/anime', label: 'Anime', icon: Sparkles, accent: '#38BDF8' },
-];
+
 
 /* ─── Status tabs ─── */
 const STATUS_TABS: { value: Status | 'all'; label: string }[] = [
@@ -187,17 +176,25 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
   const [editing, setEditing] = useState<Item | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [expandedItem, setExpandedItem] = useState<Item | null>(null);
-  const [addMenuOpen, setAddMenuOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('wv-sidebar-open');
-        if (stored !== null) return stored === 'true';
-      } catch { }
-    }
-    return true;
-  });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [sidebarMounted, setSidebarMounted] = useState(false);
+
+  // Restore sidebar state from local storage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('wv-sidebar-open');
+      if (stored !== null) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSidebarOpen(stored === 'true');
+      } else {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSidebarOpen(true) // default to true if no storage
+      }
+    } catch { }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSidebarMounted(true);
+  }, []);
 
   // Save sidebar state whenever it changes
   useEffect(() => {
@@ -205,21 +202,15 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
       localStorage.setItem('wv-sidebar-open', String(sidebarOpen));
     } catch { }
   }, [sidebarOpen]);
-  const addMenuRef = useRef<HTMLDivElement>(null);
 
-  useOutsideClick(addMenuRef, () => {
-    if (addMenuOpen) setAddMenuOpen(false);
-  });
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const layoutGroupId = React.useId();
   const [, startTransition] = useTransition();
 
   const [visibleCount, setVisibleCount] = useState(30);
 
   // Reset infinite scroll whenever filters change
   useEffect(() => {
-    setVisibleCount(30);
+    const t = setTimeout(() => setVisibleCount(30), 0);
+    return () => clearTimeout(t);
   }, [status, onlyFav, query, sort, mediaType]);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -237,13 +228,17 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
 
   /* ── Data loading from server & cache ── */
   useEffect(() => {
-    setMounted(true);
+    const t1 = setTimeout(() => setMounted(true), 0);
+    let t2: NodeJS.Timeout | undefined;
+
     // 1. Instantly parse and display cache
     try {
       const cached = localStorage.getItem(`wv-cache-items-${userId}`);
       if (cached) {
-        setItems(JSON.parse(cached));
-        setReady(true);
+        t2 = setTimeout(() => {
+          setItems(JSON.parse(cached));
+          setReady(true);
+        }, 0);
       }
     } catch { }
 
@@ -255,6 +250,10 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
       setReady((prev) => prev || true);
     });
 
+    return () => {
+      clearTimeout(t1);
+      if (t2) clearTimeout(t2);
+    };
   }, [userId]);
 
   // 3. Keep cache strictly in sync with local optimistic changes
@@ -385,22 +384,6 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
     });
   }, [renderItems, ready, ensureCover]);
 
-  const openCreate = useCallback(() => {
-    const now = Date.now();
-    setEditing({
-      id: crypto.randomUUID?.() ?? Math.random().toString(16).slice(2),
-      title: '',
-      mediaType,
-      status: 'pending',
-      favorite: false,
-      year: new Date().getFullYear(),
-      createdAt: now,
-      updatedAt: now,
-      genres: [],
-    } as Item);
-    setEditOpen(true);
-  }, [mediaType]);
-
   const openFromTmdb = useCallback(async (result: TMDBSearchResult) => {
     const now = Date.now();
     const newItem: Item = {
@@ -473,8 +456,8 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
     startTransition(() => { toggleFavorite(id); });
   }, []);
 
-  /* ── Current accent color from nav link ── */
-  const currentAccent = NAV_LINKS.find((l) => l.href === `/library/${mediaType === 'movie' ? 'movies' : mediaType === 'tv' ? 'tv' : 'anime'}`)?.accent ?? '#FF3864';
+  /* ── Current accent color ── */
+  const currentAccent = mediaType === 'movie' ? '#FF3864' : mediaType === 'tv' ? '#A855F7' : '#38BDF8';
 
   /* ── Collect unique genres from current page items ── */
   const allGenres = useMemo(() => {
@@ -502,6 +485,7 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
     { href: '/library/anime', label: 'Anime', icon: Sparkles },
   ];
 
+
   return (
     <div className="w-full text-white">
       {/* Top gradient ambiance */}
@@ -516,7 +500,7 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
         {/* ─ LEFT SIDEBAR ─ */}
         <aside
           className="hidden lg:flex flex-col flex-shrink-0 border-r border-white/[0.05] sticky top-[64px] self-start h-[calc(100vh-64px)] overflow-hidden transition-all duration-300 ease-in-out"
-          style={{ width: sidebarOpen ? 260 : 48, minWidth: sidebarOpen ? 260 : 48 }}
+          style={{ width: sidebarMounted && sidebarOpen ? 260 : 48, minWidth: sidebarMounted && sidebarOpen ? 260 : 48 }}
         >
           {/* Toggle button */}
           <button
@@ -610,8 +594,8 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
         <div className="flex-1 min-w-0 px-6 lg:px-10 py-8">
           {/* Title Row + Inline Sub-Tabs */}
           <div className="flex flex-col gap-5 mb-6">
-            {/* Sub-Tabs: Movies | TV Shows | Anime — inline pills */}
-            <div className="flex items-center">
+            {/* Sub-Tabs: Movies | TV Shows | Anime — inline pills (hidden on desktop) */}
+            <div className="md:hidden flex items-center">
               <div className="inline-flex items-center gap-1 rounded-2xl bg-white/[0.04] border border-white/[0.07] p-1.5">
                 <LayoutGroup id="sub-tabs">
                   {SUB_TABS.map((tab) => {
@@ -676,7 +660,7 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
                   <span className="text-sm font-medium">Filters</span>
                 </button>
 
-                <div className="relative z-50 flex items-center gap-2" ref={addMenuRef}>
+                <div className="relative z-50 flex items-center gap-2">
                   <TmdbSearchInput
                     mediaType={mediaType}
                     onSelect={openFromTmdb}
@@ -684,46 +668,13 @@ export default function LibraryPage({ mediaType, title }: { mediaType: MediaType
                   />
 
                   <button
-                    onClick={() => setAddMenuOpen((v) => !v)}
+                    onClick={() => setImportOpen(true)}
                     className="flex items-center justify-center h-9 w-9 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200"
-                    aria-label="Import"
+                    aria-label="Import Data"
                     title="Import data"
                   >
                     <Download className="h-4 w-4" />
                   </button>
-
-                  <AnimatePresence>
-                    {addMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                        transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
-                        className="absolute right-0 top-full mt-2 w-48 bg-[#151515] border border-white/10 rounded-2xl shadow-2xl p-1.5 origin-top-right overflow-hidden z-[100]"
-                      >
-                        <button
-                          onClick={() => {
-                            setAddMenuOpen(false);
-                            openCreate();
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[14px] font-medium text-white/80 rounded-xl hover:bg-white/10 hover:text-white transition-colors"
-                        >
-                          <Plus className="h-4 w-4" />
-                          Add Manually
-                        </button>
-                        <button
-                          onClick={() => {
-                            setAddMenuOpen(false);
-                            setImportOpen(true);
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[14px] font-medium text-white/80 rounded-xl hover:bg-white/10 hover:text-white transition-colors"
-                        >
-                          <Download className="h-4 w-4" />
-                          Import Data
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
               </div>
             </div>
