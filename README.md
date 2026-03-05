@@ -1,6 +1,6 @@
 # Watch Vault Frontend
 
-[![Deployment Status](https://img.shields.io/badge/Deployment-Live-success?style=for-the-badge)](https://watchvault.app)
+[![Deployment Status](https://img.shields.io/badge/Deployment-Live-success?style=for-the-badge)](https://watchvault-frontend.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
