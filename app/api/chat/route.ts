@@ -56,13 +56,13 @@ export async function POST(req: Request) {
                     });
 
                     if (!res.ok) {
-                        return { error: 'Failed to search media.' };
+                        return { results: [], error: 'Failed to search media.' };
                     }
                     const data = await res.json();
                     // Return top 3 matches to the AI
-                    return { results: data.results?.slice(0, 3) || [] };
+                    return { results: data.results?.slice(0, 3) || [], error: null };
                 },
-            }),
+            } as any),
             getUserLibrary: tool({
                 description: 'Fetch the user\'s current watchlist/library to see what they have watched or want to watch. Use this to provide personalized recommendations.',
                 parameters: z.object({}),
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
                     });
 
                     if (!res.ok) {
-                        return { error: 'Failed to fetch user library.' };
+                        return { library: [], error: 'Failed to fetch user library.' };
                     }
                     const data = await res.json();
                     // Return a simplified summary to avoid overwhelming the token limit
@@ -82,9 +82,9 @@ export async function POST(req: Request) {
                         status: item.status,
                         year: item.year
                     }));
-                    return { library: summary };
+                    return { library: summary, error: null };
                 },
-            }),
+            } as any),
             addToLibrary: tool({
                 description: 'Add a specific movie, tv show, or anime to the user\'s library.',
                 parameters: z.object({
@@ -112,13 +112,13 @@ export async function POST(req: Request) {
 
                     if (!res.ok) {
                         const err = await res.json();
-                        return { success: false, error: err.detail || 'Failed to add item.' };
+                        return { success: false, item: null, error: err.detail || 'Failed to add item.' };
                     }
 
                     const data = await res.json();
-                    return { success: true, item: data };
+                    return { success: true, item: data, error: null };
                 },
-            })
+            } as any)
         },
     });
 

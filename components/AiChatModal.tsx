@@ -11,10 +11,14 @@ export default function AiChatModal() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Using local state to bypass buggy input binding
-    const { messages, sendMessage, isLoading } = useChat({
+    const chat = useChat({
         api: "/api/chat",
-        onError: (e) => console.error("Chat error:", e)
-    });
+        onError: (e: any) => console.error("Chat error:", e)
+    } as any) as any;
+
+    const messages = chat.messages || [];
+    const isLoading = chat.isLoading || chat.status === 'streaming' || chat.status === 'submitted' || false;
+    const sendMessage = chat.append || chat.sendMessage;
 
     // Auto-scroll to bottom
     useEffect(() => {
@@ -132,7 +136,7 @@ export default function AiChatModal() {
                                 )}
 
                                 <AnimatePresence initial={false}>
-                                    {messages.map((m) => (
+                                    {messages.map((m: any) => (
                                         <motion.div
                                             key={m.id}
                                             initial={{ opacity: 0, scale: 0.9, originY: 1 }}
@@ -145,7 +149,7 @@ export default function AiChatModal() {
                                             >
 
                                                 {/* Normal Text Content */}
-                                                {m.content && <div className="whitespace-pre-wrap">{m.content}</div>}
+                                                {(m as any).content && <div className="whitespace-pre-wrap">{(m as any).content}</div>}
 
                                                 {/* Tool Invocations UI */}
                                                 {(m as any).toolInvocations?.map((toolInvocation: any, i: number) => {
