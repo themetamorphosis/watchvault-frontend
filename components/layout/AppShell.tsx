@@ -2,6 +2,7 @@
 
 import React from "react";
 import TopNavBar from "./TopNavBar";
+import AiChatModal from "../AiChatModal";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
     return (
@@ -23,6 +24,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
             {/* Sticky header */}
             <TopNavBar />
+
+            {/* Global AI Assistant Overlay */}
+            <AiChatModal />
 
             {/* Main content */}
             <main className="relative z-10">{children}</main>
