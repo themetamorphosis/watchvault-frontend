@@ -171,30 +171,32 @@ export default function TmdbSearchInput({
 
     return (
         <div ref={containerRef} className="relative z-50">
-            {/* ── Mobile Toggle Button (Visible only on sm and below) ────────────────────────────────────── */}
+            {/* ── Mobile Toggle Button ── */}
             <button
                 onClick={() => setIsMobileActive(true)}
-                className={`
+                className="
                     sm:hidden
-                    relative flex items-center h-9 w-9 rounded-2xl
-                    bg-white/[0.06] text-white outline-none
-                    border border-white/[0.08] backdrop-blur-sm
+                    relative flex items-center justify-center h-9 w-9 rounded-xl
+                    bg-gradient-to-br from-violet-500/20 to-rose-500/20
+                    text-white outline-none
+                    border border-white/[0.12] backdrop-blur-sm
                     transition-all duration-300 ease-out
-                    hover:bg-white/[0.08] hover:border-white/[0.12]
-                    justify-center
-                `}
+                    hover:from-violet-500/30 hover:to-rose-500/30
+                    hover:border-white/[0.18] hover:shadow-[0_0_16px_rgba(168,85,247,0.15)]
+                    active:scale-95
+                "
                 aria-label="Search TMDB"
             >
-                <Search className="h-4 w-4 pointer-events-none text-white/40" />
+                <Search className="h-4 w-4 pointer-events-none text-white/70" />
             </button>
 
-            {/* ── Desktop Inline Search Input (Visible only on sm and above) ────────────────────────────── */}
+            {/* ── Desktop Inline Search Input ── */}
             <div className="hidden sm:flex relative items-center">
-                <div className={`absolute pointer-events-none text-white/40 transition-opacity opacity-40 left-3`}>
+                <div className={`absolute pointer-events-none transition-opacity left-3 ${isExpanded ? 'text-violet-400/70' : 'text-white/40'}`}>
                     {loading ? (
-                        <Loader2 className="h-4 w-4 sm:h-3.5 sm:w-3.5 animate-spin" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                        <Search className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+                        <Search className="h-3.5 w-3.5" />
                     )}
                 </div>
                 <input
@@ -209,18 +211,17 @@ export default function TmdbSearchInput({
                     placeholder={placeholder}
                     className={`
                       h-9
-                      rounded-2xl
-                      bg-white/[0.06] text-white
+                      rounded-xl
+                      text-white
                       pl-9 pr-8
                       text-[13px] font-medium tracking-tight
-                      placeholder:text-white/30
+                      placeholder:text-white/35
                       outline-none
-                      border border-white/[0.08]
                       backdrop-blur-sm
                       transition-all duration-300 ease-out
                       ${isExpanded
-                            ? 'w-[280px] border-white/[0.14] bg-white/[0.08] shadow-[0_0_20px_rgba(255,255,255,0.06)]'
-                            : 'w-[220px] hover:bg-white/[0.08] hover:border-white/[0.12] focus:w-[280px] focus:border-white/[0.14] focus:bg-white/[0.08] focus:shadow-[0_0_20px_rgba(255,255,255,0.06)] focus:p-9 focus:pr-8 focus:text-white'
+                            ? 'w-[300px] bg-white/[0.08] border border-violet-500/25 shadow-[0_0_20px_rgba(168,85,247,0.08)]'
+                            : 'w-[220px] bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.07] hover:border-white/[0.12] focus:w-[300px] focus:border-violet-500/25 focus:bg-white/[0.08] focus:shadow-[0_0_20px_rgba(168,85,247,0.08)]'
                         }
                     `}
                     autoComplete="off"

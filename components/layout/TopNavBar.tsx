@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard,
     Library,
+    Heart,
     Compass,
     Bot,
     Users,
@@ -32,6 +33,16 @@ const NAV_TABS = [
             { href: '/library/movies', label: 'Movies', icon: Film },
             { href: '/library/tv', label: 'TV Shows', icon: Tv },
             { href: '/library/anime', label: 'Anime', icon: Sparkles },
+        ]
+    },
+    {
+        href: "/wishlist",
+        label: "Wishlist",
+        icon: Heart,
+        subTabs: [
+            { href: '/wishlist/movies', label: 'Movies', icon: Film },
+            { href: '/wishlist/tv', label: 'TV Shows', icon: Tv },
+            { href: '/wishlist/anime', label: 'Anime', icon: Sparkles },
         ]
     },
     { href: "/discovery", label: "Discovery", icon: Compass, comingSoon: true },
@@ -96,7 +107,8 @@ export default function TopNavBar() {
         (t) =>
             pathname === t.href ||
             (t.href !== "/dashboard" && pathname?.startsWith(t.href + "/")) ||
-            (t.href === "/library" && pathname?.startsWith("/library"))
+            (t.href === "/library" && pathname?.startsWith("/library")) ||
+            (t.href === "/wishlist" && pathname?.startsWith("/wishlist"))
     );
 
     /* Measure active tab and position pill */
@@ -180,7 +192,9 @@ export default function TopNavBar() {
                                                 tabRefs.current[idx] = el;
                                             }}
                                             href={
-                                                tab.href === "/library" ? "/library/movies" : tab.href
+                                                tab.href === "/library" ? "/library/movies"
+                                                : tab.href === "/wishlist" ? "/wishlist/movies"
+                                                : tab.href
                                             }
                                             onClick={() => {
                                                 if (tab.comingSoon) handleComingSoonClick(tab.label);
@@ -314,11 +328,12 @@ export default function TopNavBar() {
                                 {NAV_TABS.map((tab) => {
                                     const isActive = pathname === tab.href ||
                                         (tab.href !== "/dashboard" && pathname?.startsWith(tab.href + "/")) ||
-                                        (tab.href === "/library" && pathname?.startsWith("/library"));
+                                        (tab.href === "/library" && pathname?.startsWith("/library")) ||
+                                        (tab.href === "/wishlist" && pathname?.startsWith("/wishlist"));
                                     return (
                                         <Link
                                             key={tab.href}
-                                            href={tab.href === "/library" ? "/library/movies" : tab.href}
+                                            href={tab.href === "/library" ? "/library/movies" : tab.href === "/wishlist" ? "/wishlist/movies" : tab.href}
                                             onClick={() => {
                                                 if (tab.comingSoon) handleComingSoonClick(tab.label);
                                                 setMobileNavOpen(false);
