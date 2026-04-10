@@ -17,5 +17,38 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: ../watchvault-backend
+      dockerfile: Dockerfile
+    image: watchvault-backend:local
+    container_name: watchvault-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://watchvault:watchvault@postgres:5432/watchvault_db
+      SECRET_KEY: your-super-secret-key-change-in-production
+      TMDB_API_KEY: 414137d5aecfd3730a332566114511a9
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: watchvault-frontend:local
+    container_name: watchvault-frontend-app
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    environment:
+      API_URL: http://backend:8000/api/v1
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:8000/api/v1
+    ports:
+      - "3000:3000"
+
 volumes:
   pgdata:
