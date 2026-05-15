@@ -1,9 +1,8 @@
-import { cookies } from 'next/headers';
-
 export const maxDuration = 30;
 
 const BACKEND_API = process.env.API_URL || 'http://127.0.0.1:8000/api/v1';
-const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
+const AI_API_URL = process.env.AI_API_URL || 'https://api.deepseek.com/chat/completions';
+const AI_MODEL = process.env.AI_MODEL || 'deepseek-chat';
 
 interface ToolCall {
     id: string;
@@ -101,6 +100,7 @@ BEHAVIOR:
 export async function POST(req: Request) {
     const { messages } = await req.json();
 
+    const { cookies } = await import('next/headers');
     const cookieStore = await cookies();
     const token = cookieStore.get('auth_token')?.value;
 
@@ -108,9 +108,9 @@ export async function POST(req: Request) {
         return new Response('Unauthorized', { status: 401 });
     }
 
-    const apiKey = process.env.DEEPSEEK_API_KEY;
+    const apiKey = process.env.AI_API_KEY;
     if (!apiKey) {
-        return new Response('Missing DEEPSEEK_API_KEY', { status: 500 });
+        return new Response('Missing AI_API_KEY', { status: 500 });
     }
 
     const encoder = new TextEncoder();
@@ -124,14 +124,14 @@ export async function POST(req: Request) {
 
                 let keepGoing = true;
                 while (keepGoing) {
-                    const apiRes = await fetch(DEEPSEEK_URL, {
+                    const apiRes = await fetch(AI_API_URL, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             Authorization: `Bearer ${apiKey}`,
                         },
                         body: JSON.stringify({
-                            model: 'deepseek-chat',
+                            model: AI_MODEL,
                             messages: conversation,
                             tools: TOOLS,
                             stream: true,
@@ -140,8 +140,8 @@ export async function POST(req: Request) {
 
                     if (!apiRes.ok) {
                         const errBody = await apiRes.text();
-                        console.error('DeepSeek API error:', apiRes.status, errBody);
-                        controller.enqueue(encoder.encode(`[Error: DeepSeek API returned ${apiRes.status}]`));
+                        console.error('AI API error:', apiRes.status, errBody);
+                        controller.enqueue(encoder.encode(`[Error: AI API returned ${apiRes.status}]`));
                         break;
                     }
 

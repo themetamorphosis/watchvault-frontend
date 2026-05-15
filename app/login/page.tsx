@@ -15,8 +15,7 @@ export default function LoginPage() {
     const [isPending, setIsPending] = useState(false);
 
     useEffect(() => {
-        // Clear auth token when visiting login page
-        document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax";
+        // Clear client-side auth state (httpOnly cookie is cleared server-side on logout)
         update();
     }, [update]);
 

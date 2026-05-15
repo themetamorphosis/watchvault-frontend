@@ -1,4 +1,30 @@
-import { fetchApi } from "@/lib/apiClient";
+"use server";
+
+import { API_BASE } from "@/lib/auth";
+
+export async function getSession() {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth_token")?.value;
+    if (!token) return null;
+
+    try {
+        const res = await fetch(`${API_BASE}/auth/me`, {
+            headers: { Cookie: `auth_token=${token}` },
+            cache: "no-store",
+        });
+        if (!res.ok) return null;
+        return await res.json();
+    } catch {
+        return null;
+    }
+}
+
+export async function logout() {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    cookieStore.delete("auth_token");
+}
 
 export async function login(prevState: unknown, formData: FormData) {
     const email = formData.get("email") as string;
@@ -13,11 +39,9 @@ export async function login(prevState: unknown, formData: FormData) {
         params.append("username", email);
         params.append("password", password);
 
-        const res = await fetchApi(`/auth/login`, {
+        const res = await fetch(`${API_BASE}/auth/login`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: params.toString(),
         });
 
@@ -28,12 +52,15 @@ export async function login(prevState: unknown, formData: FormData) {
         const data = await res.json();
         const token = data.access_token;
 
-        // Set client-side cookie so we don't rely on Next.js server actions
-        const maxAge = 60 * 60 * 24 * 7; // 1 week
-        document.cookie = `auth_token=${token}; max-age=${maxAge}; path=/; samesite=lax`;
-
-        // Force a small delay so Next router picks up the cookie when pushing
-        await new Promise(r => setTimeout(r, 100));
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        cookieStore.set("auth_token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7,
+        });
 
         return { success: true };
     } catch (error) {
@@ -52,8 +79,8 @@ export async function register(prevState: unknown, formData: FormData): Promise<
         return { error: "All fields are required." };
     }
 
-    if (password.length < 6) {
-        return { error: "Password must be at least 6 characters." };
+    if (password.length < 8) {
+        return { error: "Password must be at least 8 characters." };
     }
 
     if (password !== confirmPassword) {
@@ -61,8 +88,9 @@ export async function register(prevState: unknown, formData: FormData): Promise<
     }
 
     try {
-        const res = await fetchApi(`/auth/register`, {
+        const res = await fetch(`${API_BASE}/auth/register`, {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, email, password }),
         });
 
@@ -71,7 +99,6 @@ export async function register(prevState: unknown, formData: FormData): Promise<
             return { error: err.detail || "An error occurred during registration." };
         }
 
-        // Auto login
         return login(prevState, formData);
     } catch (error) {
         console.error("Registration error:", error);

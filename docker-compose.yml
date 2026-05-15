@@ -28,9 +28,10 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://watchvault:watchvault@postgres:5432/watchvault_db
-      SECRET_KEY: your-super-secret-key-change-in-production
-      TMDB_API_KEY: 414137d5aecfd3730a332566114511a9
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://watchvault:watchvault@postgres:5432/watchvault_db}
+      SECRET_KEY: ${SECRET_KEY}
+      TMDB_API_KEY: ${TMDB_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     ports:
       - "8000:8000"
 

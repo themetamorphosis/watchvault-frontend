@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useEffect, useMemo, useState, useCallback, useTransition, useRef } from 'react';
+import React, { useState, useCallback, useTransition, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import type { Item, MediaType, Status } from '@/lib/types';
-import { getItems, upsertItem, deleteItem, toggleFavorite, importItems as importItemsAction, updateMetadata } from '@/app/actions/items';
-import { fetchPoster } from '@/lib/poster';
+import { getItems } from '@/app/actions/items';
 import MediaCard from '@/components/MediaCard';
 import EditorModal from '@/components/EditorModal';
 import ImportModal from '@/components/ImportModal';
@@ -14,6 +13,8 @@ import TmdbSearchInput from '@/components/TmdbSearchInput';
 import type { TMDBSearchResult } from '@/lib/tmdb';
 import ExpandableCardOverlay from '@/components/ExpandableCardOverlay';
 import { useSession } from '@/components/SessionProvider';
+import { useLibraryData } from '@/hooks/useLibraryData';
+import { useLibraryFilters } from '@/hooks/useLibraryFilters';
 import {
   Film,
   Tv,
@@ -26,17 +27,15 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
-/* ─── Sort options ─── */
 const SORT_OPTIONS: { value: 'recent' | 'title' | 'year'; label: string }[] = [
   { value: 'recent', label: 'Recently added' },
   { value: 'title', label: 'Name (A → Z)' },
   { value: 'year', label: 'Release year' },
 ];
 
-/* ─── Inline Sort Dropdown ─── */
 function SortDropdown({ value, onChange }: { value: string; onChange: (v: 'recent' | 'title' | 'year') => void }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -112,168 +111,50 @@ export default function LibraryPage({
   const pathname = usePathname();
   const { data: session } = useSession();
   const userId = session?.user?.id || 'guest';
-  const [items, setItems] = useState<Item[]>([]);
-  const [ready, setReady] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
-  const [query, setQuery] = useState('');
-  const [onlyFav, setOnlyFav] = useState(false);
-  const [sort, setSort] = useState<'recent' | 'title' | 'year'>('recent');
+  const {
+    items,
+    ready,
+    mounted,
+    ensureCover,
+    syncingRefs,
+    handleUpsert,
+    handleDelete,
+    handleToggleFav,
+    handleImport,
+  } = useLibraryData(userId);
+
+  const {
+    query,
+    setQuery,
+    onlyFav,
+    setOnlyFav,
+    sort,
+    setSort,
+    genreFilter,
+    setGenreFilter,
+    allGenres,
+    pageItems,
+    filtered,
+    renderItems,
+    visibleCount,
+    loadMoreRef,
+  } = useLibraryFilters(items, mediaType, mode);
+
+  const [, startTransition] = useTransition();
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<Item | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [expandedItem, setExpandedItem] = useState<Item | null>(null);
 
-  const [, startTransition] = useTransition();
-  const [visibleCount, setVisibleCount] = useState(30);
-
-  useEffect(() => {
-    const t = setTimeout(() => setVisibleCount(30), 0);
-    return () => clearTimeout(t);
-  }, [onlyFav, query, sort, mediaType]);
-
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useCallback((node: HTMLDivElement | null) => {
-    if (observerRef.current) observerRef.current.disconnect();
-    if (node) {
-      observerRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          setVisibleCount((prev) => prev + 30);
-        }
-      }, { rootMargin: '1200px' });
-      observerRef.current.observe(node);
-    }
-  }, []);
-
-  /* ── Data loading ── */
-  useEffect(() => {
-    const t1 = setTimeout(() => setMounted(true), 0);
-    let t2: NodeJS.Timeout | undefined;
-
-    try {
-      const cached = localStorage.getItem(`wv-cache-items-${userId}`);
-      if (cached) {
-        t2 = setTimeout(() => {
-          setItems(JSON.parse(cached));
-          setReady(true);
-        }, 0);
-      }
-    } catch { }
-
-    getItems().then((dbItems) => {
-      setItems(dbItems);
-      setReady(true);
-    }).catch(() => {
-      setReady((prev) => prev || true);
-    });
-
-    return () => {
-      clearTimeout(t1);
-      if (t2) clearTimeout(t2);
-    };
-  }, [userId]);
-
-  useEffect(() => {
-    if (!ready) return;
-    try {
-      localStorage.setItem(`wv-cache-items-${userId}`, JSON.stringify(items));
-    } catch { }
-  }, [items, ready, userId]);
-
-  const refreshItems = useCallback(() => {
-    getItems().then(setItems).catch(() => { });
-  }, []);
-
-  /* ── Filtering & sorting ── */
-  const pageItems = useMemo(() => {
-    const byType = items.filter((i) => i.mediaType === mediaType);
-    if (mode === 'wishlist') return byType.filter((i) => i.status === 'wishlist');
-    return byType.filter((i) => i.status !== 'wishlist');
-  }, [items, mediaType, mode]);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    let arr = pageItems.slice();
-
-    if (mode === 'library' && onlyFav) arr = arr.filter((i) => i.favorite);
-
-    if (q) {
-      arr = arr.filter((i) => {
-        const g = (i.genres ?? []).join(' ').toLowerCase();
-        return (
-          i.title.toLowerCase().includes(q) ||
-          (i.year?.toString().includes(q) ?? false) ||
-          g.includes(q) ||
-          (i.notes ?? '').toLowerCase().includes(q)
-        );
-      });
-    }
-
-    if (sort === 'recent') arr.sort((a, b) => b.updatedAt - a.updatedAt);
-    if (sort === 'title') arr.sort((a, b) => a.title.localeCompare(b.title));
-    if (sort === 'year') arr.sort((a, b) => (b.year ?? -1) - (a.year ?? -1));
-
-    return arr;
-  }, [pageItems, onlyFav, query, sort, mode]);
-
-  const renderItems = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
-
-  /* ── Callbacks ── */
-  const ensureCover = useCallback(async (it: Item): Promise<void> => {
-    if (it.coverUrl && it.genres && it.genres.length > 0 && it.description) return;
-
-    let fetchResult;
-    try {
-      fetchResult = await fetchPoster(it.title, it.mediaType, it.year);
-    } catch {
-      try { sessionStorage.setItem(`wv-poster-skip-${it.id}`, '1'); } catch { }
-      return;
-    }
-
-    if (!fetchResult) {
-      try { sessionStorage.setItem(`wv-poster-skip-${it.id}`, '1'); } catch { }
-      return;
-    }
-
-    const { coverUrl, genres, description } = fetchResult;
-    const hasNewCover = !it.coverUrl && coverUrl;
-    const hasNewGenres = (!it.genres || it.genres.length === 0) && genres && genres.length > 0;
-    const hasNewDesc = !it.description && description;
-
-    if (!hasNewCover && !hasNewGenres && !hasNewDesc) {
-      try { sessionStorage.setItem(`wv-poster-skip-${it.id}`, '1'); } catch { }
-      return;
-    }
-
-    setItems((prev) => prev.map((x) =>
-      x.id === it.id
-        ? {
-          ...x,
-          ...(hasNewCover ? { coverUrl } : {}),
-          ...(hasNewGenres ? { genres } : {}),
-          ...(hasNewDesc ? { description } : {})
-        }
-        : x
-    ));
-
-    startTransition(() => {
-      updateMetadata(it.id, {
-        ...(hasNewCover ? { coverUrl } : {}),
-        ...(hasNewGenres ? { genres } : {}),
-        ...(hasNewDesc ? { description } : {})
-      });
-    });
-  }, []);
-
-  const syncingRefs = useRef<Set<string>>(new Set());
-
+  // Poster enrichment for visible items
   useEffect(() => {
     if (!ready || renderItems.length === 0) return;
 
     const missing = renderItems.filter((it) => {
       if (syncingRefs.current.has(it.id)) return false;
       if (it.coverUrl && it.genres && it.genres.length > 0 && it.description) return false;
-      try { if (sessionStorage.getItem(`wv-poster-skip-${it.id}`)) return false; } catch { }
+      try { if (sessionStorage.getItem(`wv-poster-skip-${it.id}`)) return false; } catch {}
       return true;
     });
 
@@ -283,7 +164,7 @@ export default function LibraryPage({
       syncingRefs.current.add(it.id);
       ensureCover(it);
     });
-  }, [renderItems, ready, ensureCover]);
+  }, [renderItems, ready, ensureCover, syncingRefs]);
 
   const openFromTmdb = useCallback(async (result: TMDBSearchResult) => {
     const now = Date.now();
@@ -301,9 +182,7 @@ export default function LibraryPage({
       updatedAt: now,
     } as Item;
 
-    setItems((prev) => [newItem, ...prev]);
-
-    const res = await upsertItem({
+    const res = await handleUpsert({
       title: newItem.title,
       mediaType: newItem.mediaType,
       status: newItem.status as Status,
@@ -313,64 +192,14 @@ export default function LibraryPage({
       genres: newItem.genres,
       description: newItem.description,
     });
-
-    if (res.error) {
-      setItems((prev) => prev.filter((i) => i.id !== newItem.id));
-    } else {
-      const fresh = await getItems();
-      const filteredFresh = fresh.filter((i: Item) => i.mediaType === mediaType);
-      setItems(filteredFresh);
-    }
-  }, [mediaType, mode]);
+  }, [mediaType, mode, handleUpsert]);
 
   const openEdit = useCallback((it: Item) => {
     setEditing({ ...it });
     setEditOpen(true);
   }, []);
 
-  const upsert = useCallback((next: Omit<Item, 'id' | 'createdAt' | 'updatedAt'>, id?: string) => {
-    const now = Date.now();
-    if (id) {
-      setItems((prev) => prev.map((p) => (p.id === id ? { ...p, ...next, updatedAt: now } : p)));
-      startTransition(() => { upsertItem({ ...next, id }); });
-    } else {
-      const tempId = crypto.randomUUID?.() ?? String(now);
-      setItems((prev) => [{ id: tempId, createdAt: now, updatedAt: now, ...next }, ...prev]);
-      startTransition(async () => {
-        await upsertItem(next);
-        refreshItems();
-      });
-    }
-  }, [refreshItems]);
-
-  const remove = useCallback((id: string) => {
-    setItems((prev) => prev.filter((p) => p.id !== id));
-    startTransition(() => { deleteItem(id); });
-  }, []);
-
-  const toggleFav = useCallback((id: string) => {
-    setItems((prev) => prev.map((p) => (p.id === id ? { ...p, favorite: !p.favorite, updatedAt: Date.now() } : p)));
-    startTransition(() => { toggleFavorite(id); });
-  }, []);
-
   const currentAccent = mediaType === 'movie' ? '#FF3864' : mediaType === 'tv' ? '#A855F7' : '#38BDF8';
-
-  const allGenres = useMemo(() => {
-    const s = new Set<string>();
-    for (const it of pageItems) {
-      for (const g of it.genres ?? []) s.add(g);
-    }
-    return Array.from(s).sort();
-  }, [pageItems]);
-
-  const [genreFilter, setGenreFilter] = useState<string | null>(null);
-
-  const filteredWithGenre = useMemo(() => {
-    if (!genreFilter) return filtered;
-    return filtered.filter((it) => (it.genres ?? []).includes(genreFilter));
-  }, [filtered, genreFilter]);
-
-  const renderItemsFinal = useMemo(() => filteredWithGenre.slice(0, visibleCount), [filteredWithGenre, visibleCount]);
 
   const basePath = mode === 'wishlist' ? '/wishlist' : '/library';
   const SUB_TABS = [
@@ -381,20 +210,15 @@ export default function LibraryPage({
 
   return (
     <div className="w-full text-white">
-      {/* Top gradient ambiance */}
       <div className="pointer-events-none fixed inset-x-0 top-0 h-56 z-0"
         style={{
           background: `radial-gradient(ellipse 80% 100% at 50% 0%, ${currentAccent}10, transparent 60%)`,
         }}
       />
 
-      {/* ── Main Content (no sidebar) ── */}
       <div className="relative z-10 mx-auto max-w-[1440px] px-6 lg:px-10 pt-8 pb-10">
-
-        {/* ── Unified Control Panel ── */}
         <div className="flex flex-col gap-4 mb-8">
-
-          {/* Sub-Tabs: Movies | TV Shows | Anime — mobile only */}
+          {/* Sub-Tabs mobile */}
           <div className="md:hidden flex items-center">
             <div className="inline-flex items-center gap-1 rounded-2xl bg-white/[0.04] border border-white/[0.07] p-1.5">
               <LayoutGroup id="sub-tabs">
@@ -432,7 +256,7 @@ export default function LibraryPage({
             </div>
           </div>
 
-          {/* Row 1: Title + all action buttons on one line */}
+          {/* Title + actions */}
           <div className="flex items-center justify-between gap-4">
             <motion.div
               initial={{ opacity: 0, y: 8 }}
@@ -452,7 +276,6 @@ export default function LibraryPage({
               </div>
             </motion.div>
 
-            {/* All actions: Add + Import + Sort + Favorites */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <div className="relative z-50 flex items-center gap-2">
                 <TmdbSearchInput
@@ -490,24 +313,14 @@ export default function LibraryPage({
             </div>
           </div>
 
-          {/* Row 2: Search bar */}
+          {/* Search bar */}
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/25" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search titles, genres, years..."
-              className="
-                w-full rounded-xl
-                bg-white/[0.03] border border-white/[0.07]
-                pl-11 pr-4 py-2
-                text-[13px] font-medium tracking-tight text-white
-                placeholder:text-white/25
-                outline-none
-                focus:border-white/[0.16] focus:bg-white/[0.05]
-                backdrop-blur-sm
-                transition-all duration-300
-              "
+              className="w-full rounded-xl bg-white/[0.03] border border-white/[0.07] pl-11 pr-4 py-2 text-[13px] font-medium tracking-tight text-white placeholder:text-white/25 outline-none focus:border-white/[0.16] focus:bg-white/[0.05] backdrop-blur-sm transition-all duration-300"
             />
             {query && (
               <button
@@ -519,60 +332,58 @@ export default function LibraryPage({
             )}
           </div>
 
-          {/* Row 3: Genre chips (tight to search) */}
+          {/* Genre chips */}
           {allGenres.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-            {allGenres.map((g) => (
-              <button
-                key={g}
-                onClick={() => setGenreFilter(genreFilter === g ? null : g)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-200 border ${
-                  genreFilter === g
-                    ? 'bg-white/10 text-white border-white/15'
-                    : 'text-white/30 hover:text-white/50 hover:bg-white/[0.04] border-transparent'
-                }`}
-              >
-                {g}
-              </button>
-            ))}
-            {genreFilter && (
-              <button
-                onClick={() => setGenreFilter(null)}
-                className="px-2.5 py-1 rounded-lg text-[11px] font-medium text-rose-400/70 hover:text-rose-400 border border-rose-500/20 hover:border-rose-500/30 transition-all duration-200"
-              >
-                Clear genre
-              </button>
-            )}
-          </div>
-        )}
+              {allGenres.map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setGenreFilter(genreFilter === g ? null : g)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-200 border ${
+                    genreFilter === g
+                      ? 'bg-white/10 text-white border-white/15'
+                      : 'text-white/30 hover:text-white/50 hover:bg-white/[0.04] border-transparent'
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+              {genreFilter && (
+                <button
+                  onClick={() => setGenreFilter(null)}
+                  className="px-2.5 py-1 rounded-lg text-[11px] font-medium text-rose-400/70 hover:text-rose-400 border border-rose-500/20 hover:border-rose-500/30 transition-all duration-200"
+                >
+                  Clear genre
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* ━━━ MEDIA GRID ━━━ */}
+        {/* Media Grid */}
         <LayoutGroup id="media-grid">
           <AnimatePresence>
-            <motion.div
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-5 gap-y-8 pb-10"
-            >
+            <motion.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-5 gap-y-8 pb-10">
               {!mounted || (!ready && items.length === 0) ? (
                 <>
                   {Array.from({ length: 24 }).map((_, i) => (
                     <div key={`skeleton-${i}`} className="aspect-[2/3] w-full rounded-2xl bg-white/[0.02] animate-pulse" />
                   ))}
                 </>
-              ) : renderItemsFinal.length > 0 ? (
+              ) : renderItems.length > 0 ? (
                 <>
-                  {renderItemsFinal.map((item) => (
+                  {renderItems.map((item) => (
                     <MediaCard
                       key={item.id}
                       item={item}
                       layoutId={`card-${item.id}`}
                       onOpen={() => setExpandedItem(item)}
                       onEdit={() => openEdit(item)}
-                      onDelete={() => remove(item.id)}
-                      onFav={() => toggleFav(item.id)}
+                      onDelete={() => handleDelete(item.id)}
+                      onFav={() => handleToggleFav(item.id)}
                     />
                   ))}
-                  {visibleCount < filteredWithGenre.length && (
+                  {visibleCount < filtered.length && (
                     <div ref={loadMoreRef} className="col-span-full h-20 w-full" />
                   )}
                 </>
@@ -584,8 +395,7 @@ export default function LibraryPage({
                     <p className="mt-2 text-sm text-white/50">
                       {mode === 'wishlist'
                         ? 'Your wishlist is empty. Search and add titles you want to watch!'
-                        : 'Try adjusting your filters or search query, or add something new to your library.'
-                      }
+                        : 'Try adjusting your filters or search query, or add something new to your library.'}
                     </p>
                   </div>
                 </div>
@@ -605,14 +415,12 @@ export default function LibraryPage({
                   openEdit(it);
                 }}
                 onDelete={() => {
-                  remove(expandedItem.id);
+                  handleDelete(expandedItem.id);
                   setExpandedItem(null);
                 }}
                 onFav={() => {
-                  toggleFav(expandedItem.id);
-                  setExpandedItem((prev) =>
-                    prev ? { ...prev, favorite: !prev.favorite } : null
-                  );
+                  handleToggleFav(expandedItem.id);
+                  setExpandedItem((prev) => (prev ? { ...prev, favorite: !prev.favorite } : null));
                 }}
               />
             )}
@@ -620,7 +428,7 @@ export default function LibraryPage({
         </LayoutGroup>
       </div>
 
-      {/* ━━━ MODALS ━━━ */}
+      {/* Modals */}
       {editOpen && editing && (
         <EditorModal
           item={editing}
@@ -631,12 +439,12 @@ export default function LibraryPage({
           onChange={(next) => setEditing(next)}
           onSave={(payload) => {
             const exists = items.some((x) => x.id === editing.id);
-            upsert(payload, exists ? editing.id : undefined);
+            handleUpsert(payload, exists ? editing.id : undefined);
             setEditOpen(false);
             setEditing(null);
           }}
           onDelete={() => {
-            remove(editing.id);
+            handleDelete(editing.id);
             setEditOpen(false);
             setEditing(null);
           }}
@@ -648,31 +456,7 @@ export default function LibraryPage({
           defaultMediaType={mediaType}
           onClose={() => setImportOpen(false)}
           onImport={(newItems) => {
-            setItems((prev) => {
-              const map = new Map<string, Item>();
-              for (const p of prev) map.set(`${p.mediaType}::${p.title.toLowerCase()}::${p.year ?? ''}`, p);
-              for (const n of newItems) {
-                const k = `${n.mediaType}::${n.title.toLowerCase()}::${n.year ?? ''}`;
-                if (!map.has(k)) map.set(k, n);
-              }
-              return Array.from(map.values());
-            });
-            startTransition(async () => {
-              await importItemsAction(newItems.map(n => ({
-                title: n.title,
-                mediaType: n.mediaType,
-                status: n.status,
-                favorite: n.favorite,
-                genres: n.genres,
-                notes: n.notes,
-                year: n.year,
-                endYear: n.endYear,
-                running: n.running,
-                coverUrl: n.coverUrl,
-                runtime: n.runtime,
-              })));
-              refreshItems();
-            });
+            handleImport(newItems);
             setImportOpen(false);
           }}
         />

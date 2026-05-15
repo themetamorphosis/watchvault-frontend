@@ -1,8 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
-
-import { fetchApi } from "@/lib/apiClient";
+import { getSession } from "@/app/actions/auth";
 
 export type User = {
     id: string;
@@ -31,28 +30,10 @@ export default function SessionProvider({ children, session: initialSession }: {
 
     const update = useCallback(async () => {
         try {
-            const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]*)/);
-            const token = match ? match[1] : null;
-
-            if (!token) {
-                setSession(null);
-                setStatus("unauthenticated");
-                return;
-            }
-
-            const res = await fetchApi(`/auth/me`, {
-                cache: "no-store",
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                if (data) {
-                    setSession({ user: data });
-                    setStatus("authenticated");
-                } else {
-                    setSession(null);
-                    setStatus("unauthenticated");
-                }
+            const user = await getSession();
+            if (user) {
+                setSession({ user });
+                setStatus("authenticated");
             } else {
                 setSession(null);
                 setStatus("unauthenticated");
@@ -64,7 +45,6 @@ export default function SessionProvider({ children, session: initialSession }: {
     }, []);
 
     useEffect(() => {
-        // We let the Server Component pass down the initial session, so we don't refetch on mount if it's there
         if (!initialSession) {
             update();
         }

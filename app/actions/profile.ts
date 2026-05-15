@@ -1,4 +1,22 @@
-import { fetchApi } from "@/lib/apiClient";
+"use server";
+
+import { API_BASE } from "@/lib/auth";
+
+async function authedFetch(endpoint: string, options: RequestInit = {}) {
+    const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint}`;
+    const headers = new Headers(options.headers || {});
+    if (options.method && ["POST", "PATCH", "PUT"].includes(options.method.toUpperCase())) {
+        if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
+            headers.set("Content-Type", "application/json");
+        }
+    }
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth_token")?.value;
+    if (token) headers.set("Cookie", `auth_token=${token}`);
+    return fetch(url, { ...options, headers });
+}
+
 export async function updateProfile(prevState: unknown, formData: FormData) {
     const name = (formData.get("name") as string)?.trim();
     const image = (formData.get("image") as string)?.trim();
@@ -25,15 +43,8 @@ export async function updateProfile(prevState: unknown, formData: FormData) {
         }
     }
 
-    const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]*)/);
-    const token = match ? match[1] : null;
-
-    if (!token) {
-        return { error: "You must be signed in." };
-    }
-
     try {
-        const res = await fetchApi(`/auth/me`, {
+        const res = await authedFetch(`/auth/me`, {
             method: "PATCH",
             body: JSON.stringify({ name, image: parsedImage || null }),
         });
