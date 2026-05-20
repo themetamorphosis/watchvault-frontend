@@ -403,9 +403,10 @@ export default function LibraryPage({
             </motion.div>
           </AnimatePresence>
 
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {expandedItem && (
               <ExpandableCardOverlay
+                key={expandedItem.id}
                 item={expandedItem}
                 layoutId={`card-${expandedItem.id}`}
                 onClose={() => setExpandedItem(null)}
