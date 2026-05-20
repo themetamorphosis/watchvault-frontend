@@ -15,6 +15,7 @@ async function executeTool(name: string, args: Record<string, unknown>, token: s
         case 'searchMedia': {
             const url = new URL(`${BACKEND_API}/media/search`);
             url.searchParams.set('query', args.query as string);
+            if (args.type) url.searchParams.set('type', args.type as string);
             const res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${token}` } });
             if (!res.ok) return { results: [], error: 'Failed to search media.' };
             const data = await res.json();
@@ -49,7 +50,10 @@ const TOOLS = [
             description: 'Search for a movie, tv show, or anime title to get its exact details (type, year, overview).',
             parameters: {
                 type: 'object',
-                properties: { query: { type: 'string', description: 'The title to search for.' } },
+                properties: {
+                    query: { type: 'string', description: 'The title to search for.' },
+                    type: { type: 'string', enum: ['movie', 'tv', 'anime'], description: 'The media type to search.' },
+                },
                 required: ['query'],
             },
         },
