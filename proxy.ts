@@ -41,7 +41,7 @@ export function proxy(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' https://image.tmdb.org https: data:",
     "font-src 'self'",
-    "connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 https://api.deepseek.com",
+    "connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 https://api.deepseek.com https://watchvault-backend-d884.onrender.com",
     "frame-ancestors 'none'",
   ].join("; ");
   response.headers.set("Content-Security-Policy", csp);
