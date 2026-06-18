@@ -3,9 +3,9 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Star, Loader2, PlusCircle } from "lucide-react";
 import type { MediaType } from "@/lib/types";
 import { searchTmdb, type TMDBSearchResult } from "@/lib/tmdb";
+import { Star, Film } from "lucide-react";
 
 /* ── Props ─────────────────────────────────────────────────── */
 interface TmdbSearchInputProps {
@@ -129,7 +129,6 @@ export default function TmdbSearchInput({
     /* ── Click outside → close ──────────────────────────────── */
     useEffect(() => {
         function onClick(e: MouseEvent) {
-            // Only apply this logic for the desktop popover layout
             if (isDesktopOpen && !isMobileActive && containerRef.current && !containerRef.current.contains(e.target as Node)) {
                 setIsDesktopOpen(false);
             }
@@ -170,34 +169,25 @@ export default function TmdbSearchInput({
     const isExpanded = query.length > 0 || isDesktopOpen;
 
     return (
-        <div ref={containerRef} className="relative z-50">
+        <div ref={containerRef} className="relative z-50 font-mono">
             {/* ── Mobile Toggle Button ── */}
             <button
                 onClick={() => setIsMobileActive(true)}
                 className="
                     sm:hidden
-                    relative flex items-center justify-center h-9 w-9 rounded-xl
-                    bg-gradient-to-br from-violet-500/20 to-rose-500/20
-                    text-white outline-none
-                    border border-white/[0.12] backdrop-blur-sm
-                    transition-all duration-300 ease-out
-                    hover:from-violet-500/30 hover:to-rose-500/30
-                    hover:border-white/[0.18] hover:shadow-[0_0_16px_rgba(168,85,247,0.15)]
-                    active:scale-95
+                    flex items-center justify-center h-8 px-2.5
+                    border border-tui-border bg-tui-panel text-tui-text-muted
+                    hover:border-tui-text hover:text-tui-text transition-all text-xs
                 "
                 aria-label="Search TMDB"
             >
-                <Search className="h-4 w-4 pointer-events-none text-white/70" />
+                [ SEARCH ]
             </button>
 
             {/* ── Desktop Inline Search Input ── */}
             <div className="hidden sm:flex relative items-center">
-                <div className={`absolute pointer-events-none transition-opacity left-3 ${isExpanded ? 'text-violet-400/70' : 'text-white/40'}`}>
-                    {loading ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                        <Search className="h-3.5 w-3.5" />
-                    )}
+                <div className="absolute pointer-events-none left-3 text-tui-text-muted opacity-80 text-[10px] uppercase font-bold select-none">
+                    {loading ? "..." : "ADD >"}
                 </div>
                 <input
                     ref={inputRef}
@@ -210,18 +200,17 @@ export default function TmdbSearchInput({
                     }}
                     placeholder={placeholder}
                     className={`
-                      h-9
-                      rounded-xl
-                      text-white
-                      pl-9 pr-8
-                      text-[13px] font-medium tracking-tight
-                      placeholder:text-white/35
+                      h-8
+                      text-tui-text
+                      pl-12 pr-8
+                      text-xs uppercase
+                      placeholder:text-tui-text-muted/40
                       outline-none
-                      backdrop-blur-sm
-                      transition-all duration-300 ease-out
+                      border
+                      transition-all duration-150
                       ${isExpanded
-                            ? 'w-[300px] bg-white/[0.08] border border-violet-500/25 shadow-[0_0_20px_rgba(168,85,247,0.08)]'
-                            : 'w-[220px] bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.07] hover:border-white/[0.12] focus:w-[300px] focus:border-violet-500/25 focus:bg-white/[0.08] focus:shadow-[0_0_20px_rgba(168,85,247,0.08)]'
+                            ? 'w-[300px] bg-tui-input border-tui-text'
+                            : 'w-[220px] bg-tui-panel border-tui-border hover:border-tui-text-muted focus:w-[300px] focus:border-tui-text focus:bg-tui-input'
                         }
                     `}
                     autoComplete="off"
@@ -236,9 +225,9 @@ export default function TmdbSearchInput({
                             setHasSearched(false);
                             inputRef.current?.focus();
                         }}
-                        className="absolute right-2.5 text-white/30 hover:text-white/70 transition-colors"
+                        className="absolute right-2 text-tui-text-muted hover:text-tui-text transition-colors text-xs font-bold select-none"
                     >
-                        <X className="h-3 w-3" />
+                        [X]
                     </button>
                 )}
             </div>
@@ -247,76 +236,70 @@ export default function TmdbSearchInput({
             <AnimatePresence>
                 {isDesktopOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 4 }}
+                        transition={{ duration: 0.15 }}
                         className="
-                          hidden sm:block absolute left-0 top-full mt-2
-                          w-[340px] sm:w-[420px]
-                          max-h-[420px] overflow-y-auto
-                          rounded-2xl
-                          bg-[#111111]/95 backdrop-blur-2xl
-                          border border-white/[0.08]
-                          shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)]
-                          overscroll-contain
+                          hidden sm:block absolute left-0 top-full mt-1.5
+                          w-[420px] max-h-[380px] overflow-y-auto
+                          bg-tui-panel border border-tui-border
+                          shadow-2xl overscroll-contain
                         "
                         style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.1) transparent" }}
                     >
                         {results.length > 0 ? (
-                            <div className="py-1.5">
+                            <div className="divide-y divide-tui-border-muted">
                                 {results.map((r, i) => (
                                     <div
                                         key={r.tmdbId}
                                         id={`tmdb-result-${i}`}
                                         onMouseEnter={() => setActiveIdx(i)}
                                         className={`
-                                          w-full flex items-center gap-3 px-3 py-2.5
+                                          w-full flex items-center gap-3 px-3 py-2
                                           text-left transition-colors duration-100
                                           ${activeIdx === i
-                                                ? "bg-white/[0.08]"
-                                                : "hover:bg-white/[0.05]"
+                                                ? "bg-tui-input text-tui-text font-bold"
+                                                : "text-tui-text-muted hover:bg-tui-input/50"
                                             }
                                         `}
                                     >
                                         {/* Poster thumbnail */}
-                                        <div className="flex-shrink-0 w-10 h-[60px] rounded-lg overflow-hidden bg-white/[0.04]">
+                                        <div className="flex-shrink-0 w-10 h-[56px] border border-tui-border-muted overflow-hidden bg-tui-bg flex items-center justify-center">
                                             {r.posterUrl ? (
                                                 <img
                                                     src={r.posterUrl}
                                                     alt=""
-                                                    className="w-full h-full object-cover"
+                                                    className="w-full h-full object-cover grayscale opacity-80"
                                                     loading="lazy"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-white/20 text-xs">
-                                                    🎬
-                                                </div>
+                                                <Film className="h-4 w-4 text-tui-text-muted/40" />
                                             )}
                                         </div>
 
                                         {/* Text info */}
-                                        <div className="flex-1 min-w-0 pt-0.5">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm font-semibold text-white truncate">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-baseline gap-1.5">
+                                                <span className="text-xs font-bold text-tui-text truncate uppercase block">
                                                     {r.title}
                                                 </span>
                                                 {r.year && (
-                                                    <span className="text-xs text-white/35 flex-shrink-0">
-                                                        {r.year}
+                                                    <span className="text-[10px] text-tui-text-muted flex-shrink-0">
+                                                        ({r.year})
                                                     </span>
                                                 )}
                                             </div>
 
                                             {/* Genres */}
                                             {r.genres.length > 0 && (
-                                                <div className="flex flex-wrap gap-1 mt-1">
-                                                    {r.genres.slice(0, 3).map((g) => (
+                                                <div className="flex flex-wrap gap-1 mt-0.5">
+                                                    {r.genres.slice(0, 2).map((g) => (
                                                         <span
                                                             key={g}
-                                                            className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.06] text-white/50"
+                                                            className="text-[9px] text-tui-text-muted uppercase"
                                                         >
-                                                            {g}
+                                                            [{g}]
                                                         </span>
                                                     ))}
                                                 </div>
@@ -324,11 +307,9 @@ export default function TmdbSearchInput({
 
                                             {/* Rating */}
                                             {r.voteAverage != null && r.voteAverage > 0 && (
-                                                <div className="flex items-center gap-1 mt-1">
-                                                    <Star className="h-3 w-3 text-amber-400/70 fill-amber-400/70" />
-                                                    <span className="text-[11px] text-white/40">
-                                                        {r.voteAverage.toFixed(1)}
-                                                    </span>
+                                                <div className="mt-0.5 flex items-center gap-1 text-[10px] text-tui-amber font-bold">
+                                                    <Star className="h-3 w-3 fill-current text-tui-amber" />
+                                                    <span>{r.voteAverage.toFixed(1)}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -339,18 +320,17 @@ export default function TmdbSearchInput({
                                                 e.stopPropagation();
                                                 handleSelect(r);
                                             }}
-                                            className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full text-white/30 hover:text-white hover:bg-white/10 transition-all duration-200"
+                                            className="flex-shrink-0 px-2 py-1 text-[10px] font-bold uppercase border border-tui-green/30 text-tui-green bg-tui-green/10 hover:bg-tui-green/20 hover:text-tui-green transition-colors"
                                             title={`Add ${r.title}`}
                                         >
-                                            <PlusCircle className="h-5 w-5" />
+                                            [+ ADD]
                                         </button>
                                     </div>
                                 ))}
                             </div>
                         ) : hasSearched && !loading ? (
-                            <div className="px-4 py-8 text-center">
-                                <div className="text-2xl mb-2 opacity-40">🔍</div>
-                                <p className="text-sm text-white/40">No results found on TMDB</p>
+                            <div className="px-4 py-8 text-center text-xs text-tui-text-muted">
+                                &gt; NO RESULTS FOUND ON TMDB
                             </div>
                         ) : null}
                     </motion.div>
@@ -366,8 +346,8 @@ export default function TmdbSearchInput({
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="absolute inset-0 bg-[#0a0a0a]/90 backdrop-blur-xl"
+                                transition={{ duration: 0.15 }}
+                                className="absolute inset-0 bg-tui-bg/98 backdrop-blur-md"
                                 onClick={() => {
                                     setIsMobileActive(false);
                                     setQuery("");
@@ -376,15 +356,17 @@ export default function TmdbSearchInput({
                             />
 
                             <motion.div
-                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                                className="relative w-full max-w-2xl mt-4 sm:mt-16 px-4 sm:px-0 flex flex-col h-full sm:h-auto"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 8 }}
+                                transition={{ duration: 0.15 }}
+                                className="relative w-full max-w-2xl mt-4 px-4 flex flex-col h-full"
                             >
                                 {/* Search Input in modal */}
-                                <div className="relative flex items-center mb-2 flex-shrink-0">
-                                    <Search className="absolute left-4 h-5 w-5 text-white/40" />
+                                <div className="relative flex items-center mb-3 flex-shrink-0">
+                                    <span className="absolute left-4 text-tui-text-muted text-xs font-bold uppercase select-none">
+                                        {loading ? "..." : "QUERY >"}
+                                    </span>
                                     <input
                                         ref={inputRef}
                                         type="text"
@@ -394,34 +376,27 @@ export default function TmdbSearchInput({
                                         placeholder={placeholder}
                                         autoFocus
                                         className="
-                                        w-full h-14 rounded-2xl
-                                        bg-white/[0.1] text-white
-                                        pl-12 pr-12
-                                        text-lg font-medium tracking-tight
-                                        placeholder:text-white/30
-                                        outline-none
-                                        border border-white/[0.15]
-                                        shadow-[0_0_30px_rgba(255,255,255,0.05)]
-                                        focus:border-white/[0.25] focus:bg-white/[0.12]
-                                        transition-all duration-300
-                                    "
+                                          w-full h-12 bg-tui-input border border-tui-border text-tui-text
+                                          pl-20 pr-20
+                                          text-sm uppercase
+                                          placeholder:text-tui-text-muted/40
+                                          outline-none
+                                          focus:border-tui-text
+                                          transition-all duration-200
+                                        "
                                         autoComplete="off"
                                         spellCheck={false}
                                     />
-                                    {loading ? (
-                                        <div className="absolute right-12 text-white/40">
-                                            <Loader2 className="h-5 w-5 animate-spin" />
-                                        </div>
-                                    ) : query && (
+                                    {query && (
                                         <button
                                             onClick={() => {
                                                 setQuery("");
                                                 setResults([]);
                                                 inputRef.current?.focus();
                                             }}
-                                            className="absolute right-12 text-white/40 hover:text-white transition-colors"
+                                            className="absolute right-14 text-tui-text-muted hover:text-tui-text transition-colors text-xs font-bold uppercase select-none"
                                         >
-                                            <X className="h-4 w-4" />
+                                            [ CLEAR ]
                                         </button>
                                     )}
                                     <button
@@ -430,83 +405,78 @@ export default function TmdbSearchInput({
                                             setQuery("");
                                             setResults([]);
                                         }}
-                                        className="absolute right-4 text-white/40 hover:text-white transition-colors p-1"
+                                        className="absolute right-4 text-tui-text-muted hover:text-tui-text transition-colors text-xs font-bold uppercase select-none p-1"
                                     >
-                                        <span className="sr-only">Close</span>
-                                        <X className="h-5 w-5" />
+                                        [X]
                                     </button>
                                 </div>
 
-                                {/* Dropdown / Results in modal */}
+                                {/* Results in modal */}
                                 {(query.length > 0 || hasSearched) && (
                                     <div className="
-                                    w-full bg-[#111111]/95 rounded-2xl
-                                    border border-white/[0.08]
-                                    shadow-2xl overflow-hidden
-                                    flex flex-col flex-1 sm:flex-none
-                                    mb-4 sm:mb-0
-                                ">
+                                        w-full bg-tui-panel border border-tui-border
+                                        shadow-2xl overflow-hidden
+                                        flex flex-col flex-1 mb-6
+                                    ">
                                         <div
-                                            className="max-h-[70vh] p-2 overflow-y-auto overscroll-contain"
+                                            className="max-h-[70vh] overflow-y-auto overscroll-contain divide-y divide-tui-border-muted"
                                             style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.1) transparent" }}
                                         >
                                             {results.length > 0 ? (
-                                                <div className="flex flex-col gap-1">
+                                                <div className="flex flex-col">
                                                     {results.map((r, i) => (
                                                         <div
                                                             key={r.tmdbId}
                                                             id={`tmdb-result-${i}`}
                                                             onMouseEnter={() => setActiveIdx(i)}
                                                             className={`
-                                                          w-full flex items-center gap-3 px-3 py-2
-                                                          rounded-xl text-left transition-colors duration-100
-                                                          ${activeIdx === i
-                                                                    ? "bg-white/[0.1]"
-                                                                    : "hover:bg-white/[0.06]"
-                                                                }
-                                                        `}
+                                                              w-full flex items-center gap-3 px-3 py-2.5
+                                                              text-left transition-colors duration-100
+                                                              ${activeIdx === i
+                                                                        ? "bg-tui-input text-tui-text font-bold"
+                                                                        : "text-tui-text-muted hover:bg-tui-input/50"
+                                                                    }
+                                                            `}
                                                             onClick={() => handleSelect(r)}
                                                             role="button"
                                                             tabIndex={0}
                                                         >
                                                             {/* Poster thumbnail */}
-                                                            <div className="flex-shrink-0 w-10 h-[60px] rounded-lg overflow-hidden bg-white/[0.04] shadow-sm">
+                                                            <div className="flex-shrink-0 w-10 h-[56px] border border-tui-border-muted overflow-hidden bg-tui-bg flex items-center justify-center">
                                                                 {r.posterUrl ? (
                                                                     <img
                                                                         src={r.posterUrl}
                                                                         alt=""
-                                                                        className="w-full h-full object-cover"
+                                                                        className="w-full h-full object-cover grayscale opacity-85"
                                                                         loading="lazy"
                                                                     />
                                                                 ) : (
-                                                                    <div className="w-full h-full flex items-center justify-center text-white/20 text-xs">
-                                                                        🎬
-                                                                    </div>
+                                                                    <Film className="h-4 w-4 text-tui-text-muted/40" />
                                                                 )}
                                                             </div>
 
                                                             {/* Text info */}
-                                                            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="text-sm font-semibold text-white truncate">
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-baseline gap-1.5">
+                                                                    <span className="text-xs font-bold text-tui-text truncate uppercase block">
                                                                         {r.title}
                                                                     </span>
                                                                     {r.year && (
-                                                                        <span className="text-xs font-medium text-white/35 flex-shrink-0">
-                                                                            {r.year}
+                                                                        <span className="text-[10px] text-tui-text-muted flex-shrink-0">
+                                                                            ({r.year})
                                                                         </span>
                                                                     )}
                                                                 </div>
 
                                                                 {/* Genres */}
                                                                 {r.genres.length > 0 && (
-                                                                    <div className="flex flex-wrap gap-1 mt-1">
-                                                                        {r.genres.slice(0, 3).map((g) => (
+                                                                    <div className="flex flex-wrap gap-1 mt-0.5">
+                                                                        {r.genres.slice(0, 2).map((g) => (
                                                                             <span
                                                                                 key={g}
-                                                                                className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.06] text-white/60"
+                                                                                className="text-[9px] text-tui-text-muted uppercase"
                                                                             >
-                                                                                {g}
+                                                                                [{g}]
                                                                             </span>
                                                                         ))}
                                                                     </div>
@@ -514,11 +484,9 @@ export default function TmdbSearchInput({
 
                                                                 {/* Rating */}
                                                                 {r.voteAverage != null && r.voteAverage > 0 && (
-                                                                    <div className="flex items-center gap-1 mt-1.5">
-                                                                        <Star className="h-3 w-3 text-amber-400/80 fill-amber-400/80" />
-                                                                        <span className="text-[11px] font-medium text-white/50">
-                                                                            {r.voteAverage.toFixed(1)}
-                                                                        </span>
+                                                                    <div className="mt-0.5 flex items-center gap-1 text-[10px] text-tui-amber font-bold">
+                                                                        <Star className="h-3 w-3 fill-current text-tui-amber" />
+                                                                        <span>{r.voteAverage.toFixed(1)}</span>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -529,19 +497,17 @@ export default function TmdbSearchInput({
                                                                     e.stopPropagation();
                                                                     handleSelect(r);
                                                                 }}
-                                                                className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-all duration-200 ml-2"
+                                                                className="flex-shrink-0 px-2 py-1 text-[10px] font-bold uppercase border border-tui-green/30 text-tui-green bg-green-950/15 ml-2 hover:bg-tui-green/20 transition-colors"
                                                                 title={`Add ${r.title}`}
                                                             >
-                                                                <PlusCircle className="h-5 w-5" />
+                                                                [+ ADD]
                                                             </button>
                                                         </div>
                                                     ))}
                                                 </div>
                                             ) : hasSearched && !loading ? (
-                                                <div className="px-4 py-12 flex flex-col items-center justify-center text-center">
-                                                    <div className="text-4xl mb-3 opacity-30">🔍</div>
-                                                    <p className="text-sm font-medium text-white/50">No results found on TMDB</p>
-                                                    <p className="text-xs text-white/30 mt-1">Check for typos or try searching by IMDB ID.</p>
+                                                <div className="px-4 py-12 text-center text-xs text-tui-text-muted">
+                                                    &gt; NO RESULTS FOUND ON TMDB
                                                 </div>
                                             ) : null}
                                         </div>

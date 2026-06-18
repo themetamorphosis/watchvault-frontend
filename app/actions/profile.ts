@@ -58,3 +58,22 @@ export async function updateProfile(prevState: unknown, formData: FormData) {
 
     return { success: true };
 }
+
+export async function uploadAvatar(formData: FormData) {
+    try {
+        const res = await authedFetch(`/upload`, {
+            method: "POST",
+            body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            return { error: data.detail || data.error || "Upload failed" };
+        }
+
+        return { success: true, imageUrl: data.imageUrl };
+    } catch (error) {
+        console.error("Upload avatar error:", error);
+        return { error: "Upload failed. Please try again." };
+    }
+}

@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import type { Item, Status } from "@/lib/types";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, Star } from "lucide-react";
+import { Star } from "lucide-react";
 
 function statusText(s: Status) {
   if (s === "watched") return "Watched";
   if (s === "pending") return "Pending";
-  return "Wishlisted";
+  return "Wishlist";
 }
 
 function yearLabel(item: Item): string {
@@ -39,10 +39,12 @@ export default function MediaCard({
   onDelete: () => void;
 }) {
   const [imgFailed, setImgFailed] = useState(false);
+  const [prevCover, setPrevCover] = useState(item.coverUrl);
 
-  useEffect(() => {
+  if (item.coverUrl !== prevCover) {
+    setPrevCover(item.coverUrl);
     setImgFailed(false);
-  }, [item.coverUrl]);
+  }
 
   function handleFavActivate(e: React.SyntheticEvent) {
     e.preventDefault();
@@ -61,7 +63,24 @@ export default function MediaCard({
   }
 
   const y = yearLabel(item);
-  const meta = [y, ...(item.genres?.slice(0, 2) || [])].filter(Boolean).join(" • ");
+  const meta = [y, ...(item.genres?.slice(0, 2) || [])].filter(Boolean).join(" | ");
+
+  const isMovie = item.mediaType === "movie";
+  const isTv = item.mediaType === "tv";
+  
+  const accentBorder = isMovie 
+    ? "group-hover:border-tui-amber" 
+    : isTv 
+      ? "group-hover:border-tui-purple" 
+      : "group-hover:border-tui-green";
+
+  const badgeColor = isMovie 
+    ? "border-tui-amber/30 text-tui-amber bg-tui-amber/5" 
+    : isTv 
+      ? "border-tui-purple/30 text-tui-purple bg-tui-purple/5" 
+      : "border-tui-green/30 text-tui-green bg-tui-green/5";
+
+  const favoriteColor = isMovie ? "text-tui-amber" : isTv ? "text-tui-purple" : "text-tui-green";
 
   return (
     <motion.div
@@ -71,100 +90,95 @@ export default function MediaCard({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onOpen();
       }}
-      whileHover={{ y: -6 }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className="group relative cursor-pointer select-none text-left outline-none"
+      whileTap={{ scale: 0.98 }}
+      className="group relative cursor-pointer select-none text-left outline-none font-mono"
       aria-label={`Open ${item.title}`}
       title="Open"
     >
       <motion.div
         layoutId={layoutId}
-        className="relative overflow-hidden rounded-xl bg-white/[0.04] ring-1 ring-white/[0.06] group-hover:ring-white/[0.12] shadow-lg group-hover:shadow-2xl transition-shadow duration-500"
+        whileHover={{ y: -4 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className={`relative overflow-hidden bg-tui-panel border border-tui-border ${accentBorder} shadow-lg`}
       >
         {/* Poster */}
         <motion.div
           layoutId={layoutId ? `img-${layoutId}` : undefined}
-          className="aspect-[2/3] w-full overflow-hidden"
+          className="aspect-[2/3] w-full overflow-hidden border-b border-tui-border"
         >
           {item.coverUrl && !imgFailed ? (
             <motion.img
               src={item.coverUrl}
               alt={item.title}
-              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+              className="h-full w-full object-cover transition-all duration-200 ease-out group-hover:scale-[1.02] filter brightness-90 group-hover:brightness-100 grayscale group-hover:grayscale-0"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.3 }}
               onError={() => setImgFailed(true)}
             />
-          ) : item.coverUrl ? (
-            <div className="flex h-full w-full items-center justify-center bg-zinc-900">
-              <div className="px-4 text-center">
-                <div className="text-sm font-medium text-white/70">{item.title}</div>
-                <div className="mt-1 text-xs text-white/30">Poster unavailable</div>
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-tui-input p-4 text-center">
+              <div>
+                <div className="text-xs font-semibold text-tui-text-muted uppercase tracking-wider">{item.title}</div>
+                <div className="mt-1 text-[10px] text-tui-text-muted/50">[ NO POSTER ]</div>
               </div>
             </div>
-          ) : (
-            <div className="h-full w-full skeleton" />
           )}
         </motion.div>
 
-        {/* Hover overlay */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-        {/* Action buttons */}
-        <div className="absolute top-2.5 right-2.5 z-20 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300">
-          <motion.button
+        {/* Hover Action controls (Monospace CLI buttons) */}
+        <div className="absolute top-2 right-2 z-20 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button
             onClick={handleFavActivate}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className={`flex h-8 w-8 items-center justify-center rounded-full bg-black/50 ring-1 ring-white/10 backdrop-blur-md hover:bg-black/70 hover:ring-white/20 transition-all ${item.favorite ? "!ring-yellow-400/40" : ""}`}
-            aria-label={item.favorite ? "Unmark favorite" : "Mark favorite"}
-            title="Favorite"
+            className={`flex h-6 w-6 items-center justify-center font-mono text-[10px] border transition-all ${
+              item.favorite 
+                ? "border-tui-amber text-tui-amber bg-tui-amber/10" 
+                : "border-tui-border text-tui-text-muted bg-tui-panel hover:border-tui-border hover:text-tui-text"
+            }`}
+            title={item.favorite ? "Unfavorite" : "Favorite"}
           >
-            <Star className={`h-3.5 w-3.5 ${item.favorite ? "fill-yellow-400 text-yellow-400" : "text-white/70"}`} />
-          </motion.button>
-
-          <motion.button
+            <Star className={`h-3 w-3 ${item.favorite ? "fill-current" : ""}`} />
+          </button>
+          
+          <button
             onClick={handleMenuEdit}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-black/50 ring-1 ring-white/10 backdrop-blur-md hover:bg-black/70 hover:ring-white/20 transition-all"
-            aria-label="Edit title"
+            className="flex h-6 px-1.5 items-center justify-center font-mono text-[9px] border border-tui-border text-tui-text-muted bg-tui-panel hover:border-tui-text-muted hover:text-tui-text transition-all"
             title="Edit"
           >
-            <Pencil className="h-3.5 w-3.5 text-white/70" />
-          </motion.button>
+            EDIT
+          </button>
 
-          <motion.button
+          <button
             onClick={handleMenuDelete}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-black/50 ring-1 ring-white/10 backdrop-blur-md hover:bg-red-500/20 hover:ring-red-500/30 transition-all"
-            aria-label="Delete title"
+            className="flex h-6 px-1.5 items-center justify-center font-mono text-[9px] border border-tui-border text-tui-text-muted bg-tui-panel hover:border-red-900/50 hover:text-red-400 transition-all"
             title="Delete"
           >
-            <Trash2 className="h-3.5 w-3.5 text-white/70 group-hover/del:text-red-400" />
-          </motion.button>
+            DEL
+          </button>
         </div>
 
-        {/* Bottom info */}
-        <div className="absolute inset-x-0 bottom-0 p-3 pt-12">
+        {/* Info Strip */}
+        <div className="p-3 bg-tui-panel border-t border-tui-border/50">
           <motion.div
             layoutId={layoutId ? `title-${layoutId}` : undefined}
-            className="truncate text-[13px] font-medium text-white/90"
+            className="truncate text-[12px] font-bold text-tui-text uppercase tracking-wider"
           >
             {item.title}
           </motion.div>
+          
           {meta && (
-            <div className="mt-0.5 truncate text-[11px] text-white/50">
+            <div className="mt-0.5 truncate text-[10px] text-tui-text-muted uppercase">
               {meta}
             </div>
           )}
-          <div className="mt-1.5">
-            <span className="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/70 ring-1 ring-white/10">
+          
+          <div className="mt-2 flex items-center justify-between">
+            <span className={`inline-block font-mono text-[9px] px-1.5 py-0.5 border ${badgeColor}`}>
               {statusText(item.status)}
             </span>
+            {item.favorite && (
+              <Star className={`${favoriteColor} h-3.5 w-3.5 fill-current`} />
+            )}
           </div>
         </div>
       </motion.div>

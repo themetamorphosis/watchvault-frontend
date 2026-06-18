@@ -1,7 +1,8 @@
 "use client";
+
 import React, { useEffect, useRef, useState } from "react";
-import type { Item, MediaType, Status } from "@/lib/types";
-import { GlassSelect } from "@/components/GlassSelect";
+import type { Item, Status } from "@/lib/types";
+import { Star, Trash2 } from "lucide-react";
 
 export default function EditorModal({
   item,
@@ -34,7 +35,7 @@ export default function EditorModal({
 
   function handleSave() {
     if (!item.title.trim()) {
-      setError("Title is required.");
+      setError("TITLE IS REQUIRED.");
       return;
     }
     setError(null);
@@ -51,104 +52,164 @@ export default function EditorModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-zinc-950 ring-1 ring-white/10">
-        <div className="p-5 border-b border-white/10 flex items-center justify-between">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 p-4 font-mono text-xs">
+      <div className="w-full max-w-lg bg-tui-panel border border-tui-border shadow-2xl">
+        {/* Header */}
+        <div className="p-4 border-b border-tui-border-muted flex items-center justify-between bg-tui-bg/30">
           <div>
-            <div className="text-xs text-white/50">Details</div>
-            <div className="text-lg font-semibold">{item.title || "New item"}</div>
+            <div className="text-[9px] text-tui-text-muted uppercase tracking-widest">// EDIT_ENTRY_DATA</div>
+            <div className="text-sm font-bold text-tui-text uppercase tracking-wider mt-0.5">
+              {item.title || "NEW ENTRY"}
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10 hover:bg-white/10"
+            className="px-2.5 py-1 border border-tui-border text-tui-text-muted hover:border-tui-text hover:text-tui-text uppercase transition-all"
+            title="Cancel changes"
           >
-            Close
+            [X]
           </button>
         </div>
 
-        <div className="p-5 space-y-3">
+        {/* Form Fields */}
+        <div className="p-5 space-y-4">
           {error && (
-            <div className="rounded-xl bg-red-500/10 p-3 text-sm text-red-300 ring-1 ring-red-500/20">
-              {error}
+            <div className="border border-tui-red/30 bg-tui-red/10 p-3 text-tui-red uppercase font-bold">
+              ! ERROR: {error}
             </div>
           )}
 
-          <input
-            ref={firstRef}
-            value={item.title}
-            onChange={(e) => set("title", e.target.value)}
-            placeholder="Title"
-            className="w-full rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10 outline-none focus:ring-2 focus:ring-white/20"
-          />
-
-          <input
-            type="text"
-            value={item.year ?? ""}
-            onChange={(e) => {
-              const val = e.target.value.replace(/\D/g, "");
-              set("year", val ? Number(val) : undefined);
-            }}
-            placeholder="Year"
-            className="w-full rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10 outline-none focus:ring-2 focus:ring-white/20"
-          />
-
-          <input
-            value={(item.genres ?? []).join(", ")}
-            onChange={(e) =>
-              set(
-                "genres",
-                e.target.value.split(",").map((g) => g.trim()).filter(Boolean)
-              )
-            }
-            placeholder="Genres (comma separated)"
-            className="w-full rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10 outline-none focus:ring-2 focus:ring-white/20"
-          />
-
-          <div className="grid grid-cols-2 gap-2">
-            <GlassSelect
-              value={item.status}
-              onChange={(v) => set("status", v)}
-              options={[
-                { value: "watched", label: "Watched" },
-                { value: "pending", label: "Pending" },
-                { value: "wishlist", label: "Wishlisted" }
-              ]}
-              className="w-full"
-              buttonClassName="w-full justify-between !rounded-xl !px-3 font-normal"
-              minWidth="100%"
-            />
-
+          {/* Title Field */}
+          <div className="space-y-1">
+            <label className="text-[10px] text-tui-text-muted uppercase font-bold tracking-wider select-none">
+              TITLE &gt;
+            </label>
             <input
+              ref={firstRef}
+              type="text"
+              value={item.title}
+              onChange={(e) => set("title", e.target.value)}
+              placeholder="ENTER TITLE"
+              className="w-full bg-tui-input border border-tui-border text-tui-text px-3 py-2 text-xs uppercase outline-none focus:border-tui-amber placeholder:text-tui-text-muted/30"
+              autoComplete="off"
+            />
+          </div>
+
+          {/* Year & Status Fields in Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] text-tui-text-muted uppercase font-bold tracking-wider select-none">
+                YEAR &gt;
+              </label>
+              <input
+                type="text"
+                value={item.year ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  set("year", val ? Number(val) : undefined);
+                }}
+                placeholder="YYYY"
+                maxLength={4}
+                className="w-full bg-tui-input border border-tui-border text-tui-text px-3 py-2 text-xs uppercase outline-none focus:border-tui-amber placeholder:text-tui-text-muted/30"
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] text-tui-text-muted uppercase font-bold tracking-wider select-none">
+                STATUS &gt;
+              </label>
+              <select
+                value={item.status}
+                onChange={(e) => set("status", e.target.value as Status)}
+                className="w-full bg-tui-input border border-tui-border text-tui-text px-3 py-2 text-xs uppercase outline-none focus:border-tui-amber"
+              >
+                <option value="watched">WATCHED</option>
+                <option value="pending">PENDING</option>
+                <option value="wishlist">WISHLISTED</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Genres Field */}
+          <div className="space-y-1">
+            <label className="text-[10px] text-tui-text-muted uppercase font-bold tracking-wider select-none">
+              GENRES (COMMA SEPARATED) &gt;
+            </label>
+            <input
+              type="text"
+              value={(item.genres ?? []).join(", ")}
+              onChange={(e) =>
+                set(
+                  "genres",
+                  e.target.value.split(",").map((g) => g.trim()).filter(Boolean)
+                )
+              }
+              placeholder="ACTION, SCI-FI, DRAMA"
+              className="w-full bg-tui-input border border-tui-border text-tui-text px-3 py-2 text-xs uppercase outline-none focus:border-tui-amber placeholder:text-tui-text-muted/30"
+              autoComplete="off"
+            />
+          </div>
+
+          {/* Cover Url Field */}
+          <div className="space-y-1">
+            <label className="text-[10px] text-tui-text-muted uppercase font-bold tracking-wider select-none">
+              COVER URL (OPTIONAL) &gt;
+            </label>
+            <input
+              type="text"
               value={item.coverUrl ?? ""}
               onChange={(e) => set("coverUrl", e.target.value || undefined)}
-              placeholder="Custom cover URL (optional)"
-              className="w-full rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10 outline-none focus:ring-2 focus:ring-white/20"
+              placeholder="HTTP://IMAGE.URL"
+              className="w-full bg-tui-input border border-tui-border text-tui-text px-3 py-2 text-xs outline-none focus:border-tui-amber placeholder:text-tui-text-muted/30"
+              autoComplete="off"
+            />
+          </div>
+
+          {/* Notes Field */}
+          <div className="space-y-1">
+            <label className="text-[10px] text-tui-text-muted uppercase font-bold tracking-wider select-none">
+              NOTES / COMMENTS &gt;
+            </label>
+            <textarea
+              value={item.notes ?? ""}
+              onChange={(e) => set("notes", e.target.value)}
+              placeholder="WRITE NOTES HERE..."
+              rows={3}
+              className="w-full bg-tui-input border border-tui-border text-tui-text px-3 py-2 text-xs uppercase outline-none focus:border-tui-amber placeholder:text-tui-text-muted/30 resize-none"
             />
           </div>
         </div>
 
-        <div className="p-5 border-t border-white/10 flex items-center justify-between">
+        {/* Footer Actions */}
+        <div className="p-4 border-t border-tui-border-muted flex items-center justify-between bg-tui-bg/30">
           <button
             onClick={() => set("favorite", !item.favorite)}
-            className="rounded-xl bg-white/5 px-4 py-2 text-sm ring-1 ring-white/10 hover:bg-white/10"
+            className={`px-3 py-1.5 border transition-all duration-150 uppercase tracking-wider flex items-center gap-1.5 ${
+              item.favorite
+                ? "border-tui-amber text-tui-amber bg-tui-amber/10 font-bold"
+                : "border-tui-border text-tui-text-muted hover:text-tui-text hover:border-tui-text"
+            }`}
           >
-            {item.favorite ? "★ Favorited" : "☆ Favorite"}
+            <Star className={`h-3.5 w-3.5 ${item.favorite ? "fill-current" : ""}`} />
+            <span>{item.favorite ? "FAVORITED" : "FAVORITE"}</span>
           </button>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 font-bold">
             {onDelete && (
               <button
                 onClick={onDelete}
-                className="rounded-xl bg-red-500/10 px-4 py-2 text-sm text-red-200 ring-1 ring-red-500/20 hover:bg-red-500/15"
+                className="px-3 py-1.5 border border-tui-red/30 text-tui-red bg-tui-red/10 hover:border-tui-red transition-all uppercase tracking-wider flex items-center gap-1.5"
               >
-                Delete
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>DELETE</span>
               </button>
             )}
             <button
               onClick={handleSave}
-              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-white/90"
+              className="px-4 py-1.5 border border-tui-border bg-tui-text text-tui-bg hover:bg-tui-text/90 transition-all uppercase tracking-wider"
             >
-              Save
+              SAVE
             </button>
           </div>
         </div>

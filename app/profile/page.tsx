@@ -15,8 +15,8 @@ import {
     Loader2,
     Upload,
 } from "lucide-react";
-import { updateProfile } from "@/app/actions/profile";
-import { fetchApi } from "@/lib/apiClient";
+import { updateProfile, uploadAvatar } from "@/app/actions/profile";
+import AppShell from "@/components/layout/AppShell";
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -89,20 +89,15 @@ export default function ProfilePage() {
             const formData = new FormData();
             formData.append("file", file);
 
-            const res = await fetchApi(`/upload`, {
-                method: "POST",
-                body: formData,
-            });
+            const res = await uploadAvatar(formData);
 
-            const data = await res.json();
-
-            if (!res.ok) {
-                setUploadError(data.error || "Upload failed");
+            if (res.error) {
+                setUploadError(res.error);
                 return;
             }
 
-            setImagePreview(data.imageUrl);
-            setImageUrlInput(data.imageUrl);
+            setImagePreview(res.imageUrl!);
+            setImageUrlInput(res.imageUrl!);
             await updateSession();
             setShowSaved(true);
             setTimeout(() => setShowSaved(false), 2500);
@@ -116,74 +111,44 @@ export default function ProfilePage() {
 
     if (!session) {
         return (
-            <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-                <Loader2 className="h-8 w-8 text-white/30 animate-spin" />
+            <div className="min-h-screen bg-tui-bg flex items-center justify-center font-mono">
+                <Loader2 className="h-8 w-8 text-tui-text-muted/35 animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen w-full bg-[#050505] text-white">
-            {/* Ambient glow */}
-            <div
-                className="pointer-events-none fixed inset-x-0 top-0 h-72 z-0"
-                style={{
-                    background:
-                        "radial-gradient(ellipse 70% 100% at 50% 0%, rgba(168, 85, 247, 0.08), transparent 60%)",
-                }}
-            />
-
-            {/* Header */}
-            <div
-                className="sticky top-0 z-40 border-b border-white/[0.06]"
-                style={{
-                    background: "rgba(5, 5, 5, 0.75)",
-                    backdropFilter: "blur(20px) saturate(160%)",
-                }}
-            >
-                <div className="mx-auto w-full max-w-[800px] px-6">
-                    <div className="flex items-center justify-between py-4">
-                        <Link
-                            href="/dashboard"
-                            className="flex items-center gap-2 text-sm text-white/50 hover:text-white/80 transition-colors"
-                        >
-                            <ArrowLeft className="h-4 w-4" />
-                            Back to Dashboard
-                        </Link>
-                        <button
-                            onClick={() => signOut({ callbackUrl: "/" })}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm text-white/40 hover:text-red-400/80 hover:bg-red-500/[0.06] transition-all duration-200"
-                        >
-                            <LogOut className="h-3.5 w-3.5" />
-                            Sign Out
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Content */}
-            <div className="relative z-10 mx-auto w-full max-w-[800px] px-6 pt-12 pb-20">
+        <AppShell>
+            <div className="relative z-10 mx-auto w-full max-w-[800px] px-6 pt-12 pb-20 font-mono text-xs text-tui-text">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 >
-                    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
-                        Profile
+                    <Link
+                        href="/dashboard"
+                        className="inline-flex items-center gap-2 text-xs font-mono text-tui-text-muted hover:text-tui-text transition-colors uppercase mb-6"
+                    >
+                        <ArrowLeft className="h-3.5 w-3.5" />
+                        [ BACK TO DASHBOARD ]
+                    </Link>
+
+                    <h1 className="text-2xl font-bold uppercase tracking-wider mb-2 text-tui-text">
+                        Profile Settings
                     </h1>
-                    <p className="text-sm text-white/35 mb-10">
-                        Manage your account settings
+                    <p className="text-tui-text-muted uppercase mb-10">
+                        [ MANAGE YOUR ACCOUNT DIRECTORY ]
                     </p>
 
                     {/* Profile card */}
-                    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
-                        {/* Banner */}
-                        <div className="h-28 bg-gradient-to-r from-rose-500/20 via-violet-500/20 to-cyan-500/20" />
+                    <div className="border border-tui-border bg-tui-panel p-8 mb-6 relative">
+                        {/* Accent Bar */}
+                        <div className="h-1 bg-tui-amber absolute left-0 right-0 top-0" />
 
                         {/* Avatar with upload */}
-                        <div className="px-8 -mt-12">
-                            <div className="relative inline-block group">
-                                <div className="h-24 w-24 rounded-full border-4 border-[#0a0a0a] overflow-hidden bg-white/[0.06]">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8 mt-2">
+                            <div className="relative group">
+                                <div className="h-24 w-24 border border-tui-border bg-tui-input overflow-hidden">
                                     {imagePreview ? (
                                         <img
                                             src={imagePreview}
@@ -192,8 +157,8 @@ export default function ProfilePage() {
                                             onError={() => setImagePreview(null)}
                                         />
                                     ) : (
-                                        <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-rose-500/20 to-violet-500/20">
-                                            <span className="text-3xl font-bold text-white/60">
+                                        <div className="h-full w-full flex items-center justify-center bg-tui-input text-tui-text-muted">
+                                            <span className="text-3xl font-bold font-mono">
                                                 {session.user?.name?.[0]?.toUpperCase() || "U"}
                                             </span>
                                         </div>
@@ -204,7 +169,7 @@ export default function ProfilePage() {
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
                                     disabled={uploading}
-                                    className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center cursor-pointer border-4 border-transparent"
+                                    className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center cursor-pointer border-0"
                                 >
                                     {uploading ? (
                                         <Loader2 className="h-6 w-6 text-white animate-spin" />
@@ -219,26 +184,33 @@ export default function ProfilePage() {
                                     onChange={handleFileUpload}
                                     className="hidden"
                                 />
-                                {/* Camera badge */}
-                                <div className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-violet-600 border-2 border-[#0a0a0a] flex items-center justify-center">
-                                    <Camera className="h-3.5 w-3.5 text-white" />
-                                </div>
                             </div>
-                            <p className="text-xs text-white/25 mt-2">
-                                Click avatar to upload a photo
-                            </p>
+                            <div>
+                                <h3 className="font-bold text-tui-text uppercase mb-1">USER AVATAR</h3>
+                                <p className="text-[10px] text-tui-text-muted uppercase mb-3">
+                                    [ CLICK AVATAR BOX TO UPLOAD NEW IMAGE ]
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploading}
+                                    className="px-3 py-1.5 border border-tui-border bg-tui-input text-[10px] text-tui-text-muted hover:border-tui-text hover:text-tui-text transition-all uppercase cursor-pointer"
+                                >
+                                    {uploading ? "Uploading..." : "Select File"}
+                                </button>
+                            </div>
                         </div>
 
                         {/* Form */}
-                        <form onSubmit={handleSubmit} className="px-8 pt-6 pb-8">
+                        <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Upload error */}
                             {uploadError && (
                                 <motion.div
                                     initial={{ opacity: 0, y: -8 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400"
+                                    className="p-4 border border-tui-red bg-tui-red/10 text-tui-red uppercase font-mono text-xs"
                                 >
-                                    {uploadError}
+                                    ERROR: {uploadError}
                                 </motion.div>
                             )}
 
@@ -247,9 +219,9 @@ export default function ProfilePage() {
                                 <motion.div
                                     initial={{ opacity: 0, y: -8 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400"
+                                    className="p-4 border border-tui-red bg-tui-red/10 text-tui-red uppercase font-mono text-xs"
                                 >
-                                    {error}
+                                    ERROR: {error}
                                 </motion.div>
                             )}
 
@@ -259,64 +231,64 @@ export default function ProfilePage() {
                                     initial={{ opacity: 0, y: -8 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0 }}
-                                    className="mb-6 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm text-emerald-400 flex items-center gap-2"
+                                    className="p-4 border border-tui-green bg-tui-green/10 text-tui-green uppercase font-mono text-xs flex items-center gap-2"
                                 >
                                     <Check className="h-4 w-4" />
-                                    Profile updated successfully
+                                    SUCCESS: PROFILE UPDATED SUCCESSFULLY
                                 </motion.div>
                             )}
 
                             <div className="space-y-5">
                                 {/* Name */}
                                 <div>
-                                    <label className="block text-sm font-medium text-white/50 mb-2">
-                                        Display Name
+                                    <label className="block text-[10px] font-bold text-tui-text-muted uppercase mb-2 tracking-wider">
+                                        DISPLAY NAME
                                     </label>
                                     <div className="relative">
-                                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/25" />
+                                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-tui-text-muted/40" />
                                         <input
                                             type="text"
                                             name="name"
                                             defaultValue={session.user?.name || ""}
-                                            placeholder="Your name"
-                                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/20 text-sm focus:outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
+                                            placeholder="YOUR NAME"
+                                            className="w-full pl-11 pr-4 py-2.5 bg-tui-input border border-tui-border text-tui-text placeholder:text-tui-text-muted/30 focus:border-tui-text focus:bg-tui-input outline-none transition-all uppercase"
                                         />
                                     </div>
                                 </div>
 
                                 {/* Email (read-only) */}
                                 <div>
-                                    <label className="block text-sm font-medium text-white/50 mb-2">
-                                        Email
+                                    <label className="block text-[10px] font-bold text-tui-text-muted uppercase mb-2 tracking-wider">
+                                        EMAIL ADDRESS
                                     </label>
                                     <div className="relative">
-                                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/25" />
+                                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-tui-text-muted/30" />
                                         <input
                                             type="email"
                                             value={session.user?.email || ""}
                                             disabled
-                                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/[0.02] border border-white/[0.05] text-white/40 text-sm cursor-not-allowed"
+                                            className="w-full pl-11 pr-4 py-2.5 bg-tui-input/40 border border-tui-border/50 text-tui-text-muted/65 cursor-not-allowed uppercase"
                                         />
                                     </div>
-                                    <p className="text-xs text-white/20 mt-1.5">
-                                        Email cannot be changed
+                                    <p className="text-[10px] text-tui-text-muted/50 uppercase mt-1.5">
+                                        * Email address is read-only and cannot be altered
                                     </p>
                                 </div>
 
                                 {/* Profile Image URL — alternative to upload */}
                                 <div>
-                                    <label className="block text-sm font-medium text-white/50 mb-2">
-                                        Or paste a photo URL
+                                    <label className="block text-[10px] font-bold text-tui-text-muted uppercase mb-2 tracking-wider">
+                                        PHOTO URL DIRECTORY
                                     </label>
                                     <div className="relative">
-                                        <Camera className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/25" />
+                                        <Camera className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-tui-text-muted/40" />
                                         <input
                                             type="text"
                                             name="image"
                                             value={imageUrlInput}
-                                            placeholder="https://example.com/photo.jpg"
+                                            placeholder="HTTPS://EXAMPLE.COM/PHOTO.JPG"
                                             onChange={handleImageUrlChange}
-                                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/20 text-sm focus:outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
+                                            className="w-full pl-11 pr-4 py-2.5 bg-tui-input border border-tui-border text-tui-text placeholder:text-tui-text-muted/30 focus:border-tui-text focus:bg-tui-input outline-none transition-all"
                                         />
                                     </div>
                                 </div>
@@ -328,51 +300,45 @@ export default function ProfilePage() {
                                 disabled={isPending}
                                 whileHover={{ scale: 1.01 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="mt-8 w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-rose-600 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 transition-shadow duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full sm:w-auto px-6 py-2.5 border border-tui-border bg-tui-panel text-tui-text hover:border-tui-text hover:text-tui-amber hover:bg-tui-input transition-all uppercase font-bold cursor-pointer"
                             >
-                                {isPending ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Saving...
-                                    </>
-                                ) : (
-                                    "Save Changes"
-                                )}
+                                {isPending ? "SAVING CHANGES..." : "[ SAVE CHANGES ]"}
                             </motion.button>
                         </form>
                     </div>
 
                     {/* Account info */}
-                    <div className="mt-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-8">
-                        <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wide mb-4">
-                            Account
+                    <div className="border border-tui-border bg-tui-panel p-6 relative">
+                        <div className="h-1 bg-tui-red absolute left-0 right-0 top-0" />
+                        <h3 className="text-[10px] font-bold text-tui-text-muted uppercase tracking-wider mb-4">
+                            SYSTEM ACCOUNT DETAILS
                         </h3>
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                             <div>
-                                <div className="text-sm text-white/70">
-                                    Signed in as{" "}
-                                    <span className="font-medium text-white/90">
+                                <div className="text-tui-text-muted uppercase">
+                                    SIGNED IN AS:{" "}
+                                    <span className="font-bold text-tui-text">
                                         {session.user?.email}
                                     </span>
                                 </div>
-                                <div className="text-xs text-white/30 mt-1">
-                                    Member since{" "}
+                                <div className="text-[10px] text-tui-text-muted/60 uppercase mt-1">
+                                    MEMBER DIRECTORY CREATED:{" "}
                                     {new Date().toLocaleDateString("en-US", {
                                         month: "long",
                                         year: "numeric",
-                                    })}
+                                    }).toUpperCase()}
                                 </div>
                             </div>
                             <button
                                 onClick={() => signOut({ callbackUrl: "/" })}
-                                className="px-4 py-2 rounded-xl border border-red-500/20 text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/[0.06] hover:border-red-500/30 transition-all duration-200"
+                                className="px-4 py-2 border border-tui-border bg-tui-input text-tui-red hover:border-tui-red hover:bg-tui-red/15 transition-all duration-200 uppercase font-bold cursor-pointer"
                             >
-                                Sign Out
+                                [ SIGN OUT SESSION ]
                             </button>
                         </div>
                     </div>
                 </motion.div>
             </div>
-        </div>
+        </AppShell>
     );
 }

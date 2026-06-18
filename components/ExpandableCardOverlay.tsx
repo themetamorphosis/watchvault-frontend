@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Item } from "@/lib/types";
 import { useOutsideClick } from "@/hooks/use-outside-click";
-import { X, Star, Pencil, Trash2 } from "lucide-react";
+import { Star, Edit, Trash2, X, Film } from "lucide-react";
 
 function yearLabel(item: Item): string {
     if (item.mediaType === "movie") return item.year ? String(item.year) : "";
@@ -70,11 +70,13 @@ export default function ExpandableCardOverlay({
 
     // Build meta string
     const metaParts = [];
-    metaParts.push(getStatusText(item.status));
+    metaParts.push(getStatusText(item.status).toUpperCase());
     if (y) metaParts.push(y);
-    if (genres.length > 0) metaParts.push(genres.join(", "));
-    if (item.runtime) metaParts.push(`${item.runtime}m`);
-    const metaString = metaParts.join(" • ");
+    if (genres.length > 0) metaParts.push(genres.join(", ").toUpperCase());
+    if (item.runtime) metaParts.push(`${item.runtime}MIN`);
+    const metaString = metaParts.join(" | ");
+
+    const mediaAccent = item.mediaType === 'movie' ? 'var(--accent-amber)' : item.mediaType === 'tv' ? 'var(--accent-purple)' : 'var(--accent-green)';
 
     return (
         <>
@@ -83,142 +85,130 @@ export default function ExpandableCardOverlay({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, pointerEvents: "none" }}
-                transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-md"
+                transition={{ duration: 0.15 }}
+                className="fixed inset-0 z-[90] bg-tui-bg/80 backdrop-blur-sm"
             />
 
             {/* Panel container */}
-            <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none overscroll-contain p-4 pt-24 sm:p-0">
-                {/* Animated card */}
+            <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none p-4 pt-16 md:p-0">
+                {/* TUI detail panel */}
                 <motion.div
                     ref={panelRef}
                     layoutId={layoutId}
                     initial={{ opacity: 1 }}
                     animate={{ opacity: 1 }}
-                    exit={{ opacity: 1, pointerEvents: "none", transition: { duration: 0.2 } }}
-                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                    exit={{ opacity: 1, pointerEvents: "none", transition: { duration: 0.15 } }}
                     className="
                         pointer-events-auto
-                        relative w-full max-w-[900px] h-full max-h-[85vh] sm:h-[70vh] sm:min-h-[600px] sm:max-h-[850px]
-                        flex flex-col sm:grid sm:grid-cols-[430px_1fr]
-                        rounded-3xl overflow-hidden
-                        liquid-glass border border-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06)_inset] shadow-2xl
+                        relative w-full max-w-[800px] h-[80vh] md:h-[420px]
+                        flex flex-col md:grid md:grid-cols-[280px_1fr]
+                        bg-tui-panel border border-tui-border text-tui-text font-mono text-xs
+                        overflow-hidden
                     "
                     style={{ willChange: "transform, opacity" }}
                 >
-                    {/* Left Column: Poster */}
-                    <div className="relative shrink-0 h-[45vh] sm:h-full w-full [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)] sm:[mask-image:linear-gradient(to_right,black_60%,transparent_100%)]">
+                    {/* Close button (top right) */}
+                    <button
+                        onClick={handleClose}
+                        className="absolute top-4 right-4 text-tui-text-muted hover:text-tui-text transition-colors z-20 flex items-center justify-center h-8 w-8 hover:bg-tui-input rounded-full"
+                        title="Close details"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+
+                    {/* Left Column: Cover Image with sharp border */}
+                    <div className="relative shrink-0 h-[40%] md:h-full w-full bg-tui-bg border-r border-tui-border-muted overflow-hidden flex items-center justify-center">
                         {item.coverUrl ? (
                             <img
                                 src={item.coverUrl}
                                 alt={item.title}
-                                className="absolute inset-0 h-full w-full object-cover"
+                                className="h-full w-full object-cover grayscale hover:grayscale-0 transition-all duration-300"
                             />
                         ) : (
-                            <div className="absolute inset-0 bg-neutral-900" />
+                            <div className="w-full h-full flex items-center justify-center text-tui-text-muted text-3xl">
+                                <Film className="h-12 w-12 text-tui-text-muted/30" />
+                            </div>
                         )}
                     </div>
 
-                    {/* Right Column: Content Panel */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1, transition: { delay: 0.15, duration: 0.3 } }}
-                        exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                        className="flex flex-col p-5 sm:p-8 gap-4 sm:gap-5 overflow-y-auto w-full relative h-full flex-1 min-h-0 bg-transparent"
-                        style={{ scrollbarWidth: "none" }}
-                    >
-                        {/* Top Right Actions */}
-                        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 z-10">
-                            <motion.button
-                                onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.05] border border-white/5 hover:bg-white/10 hover:border-white/15 text-white/70 hover:text-white transition-all shadow-sm"
-                                title="Edit"
+                    {/* Right Column: Monospace Content */}
+                    <div className="flex flex-col p-6 md:p-8 gap-4 overflow-y-auto w-full relative h-full flex-1 min-h-0 bg-tui-panel">
+                        {/* Title header block */}
+                        <div>
+                            <div className="text-[9px] text-tui-text-muted uppercase tracking-widest mb-1 select-none">
+                                // ENTRY_DETAILS_VIEW
+                            </div>
+                            <h2 
+                                className="text-2xl font-bold uppercase tracking-wider text-tui-text"
+                                style={{ borderLeft: `3px solid ${mediaAccent}`, paddingLeft: "10px" }}
                             >
-                                <Pencil className="h-4 w-4" />
-                            </motion.button>
-
-                            <motion.button
-                                onClick={(e) => { e.stopPropagation(); setDeleteConfirm(true); }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.05] border border-white/5 hover:bg-red-500/10 hover:border-red-500/20 text-white/70 hover:text-red-400 transition-all shadow-sm"
-                                title="Delete"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </motion.button>
-
-                            <div className="mx-1 h-5 w-px bg-white/10" />
-
-                            <motion.button
-                                onClick={(e) => { e.stopPropagation(); handleClose(); }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 border border-white/10 hover:bg-white/20 hover:border-white/20 text-white/90 transition-all shadow-sm"
-                                title="Close"
-                            >
-                                <X className="h-4 w-4" />
-                            </motion.button>
+                                {item.title}
+                            </h2>
+                            <div className="text-[10px] text-tui-text-muted mt-2 uppercase select-none font-bold">
+                                &gt; {metaString}
+                            </div>
                         </div>
 
-                        {/* Content Readability Wrapper */}
-                        <div className="mt-2 sm:mt-8 pr-0 sm:pr-16 bg-transparent">
-                            <div className="hidden sm:block">
-                                {/* Desktop Title (Animated) */}
-                                <motion.h2
-                                    layoutId={typeof window !== 'undefined' && window.innerWidth >= 640 ? `title-${layoutId}` : undefined}
-                                    className="text-3xl font-semibold tracking-tight text-white leading-tight"
-                                >
-                                    {item.title}
-                                </motion.h2>
-                            </div>
-
-                            <div className="flex items-center gap-3 mt-0 sm:mt-3">
-                                <div className="text-sm text-white/70 font-medium">
-                                    {metaString}
-                                </div>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onFav();
-                                    }}
-                                    className="shrink-0 text-white/50 hover:text-white transition-colors"
-                                >
-                                    <Star className={`h-5 w-5 sm:h-6 sm:w-6 ${item.favorite ? "fill-white text-white" : ""}`} />
-                                </button>
-                            </div>
-
-                            {/* Description */}
-                            {item.description && (
-                                <div className="text-white/80 leading-relaxed max-w-[58ch] mt-6">
+                        {/* Description */}
+                        {item.description && (
+                            <div className="border-t border-tui-border-muted pt-3">
+                                <div className="text-[9px] text-tui-text-muted uppercase tracking-widest mb-1.5 select-none">// OVERVIEW</div>
+                                <p className="text-tui-text-muted leading-relaxed max-w-[65ch] text-justify opacity-90">
                                     {item.description}
-                                </div>
-                            )}
+                                </p>
+                            </div>
+                        )}
 
-                            {/* Notes */}
-                            {item.notes && (
-                                <div className="mt-6">
-                                    <div className="text-sm text-neutral-500 uppercase tracking-widest font-semibold mb-2">Notes</div>
-                                    <div className="text-white/80 leading-relaxed max-w-[58ch] whitespace-pre-wrap">
-                                        {item.notes}
-                                    </div>
-                                </div>
-                            )}
+                        {/* Notes */}
+                        {item.notes && (
+                            <div className="border-t border-tui-border-muted pt-3">
+                                <div className="text-[9px] text-tui-text-muted uppercase tracking-widest mb-1 select-none">// USER_NOTES</div>
+                                <p className="text-tui-text-muted leading-relaxed max-w-[65ch] whitespace-pre-wrap opacity-90">
+                                    {item.notes}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* TUI Actions Row */}
+                        <div className="mt-auto pt-4 border-t border-tui-border-muted flex flex-wrap gap-2 text-xs">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onFav(); }}
+                                className={`px-3 py-1.5 border transition-all duration-150 uppercase tracking-wider flex items-center gap-1.5 ${
+                                    item.favorite
+                                        ? "border-tui-amber text-tui-amber bg-tui-amber/10 font-bold"
+                                        : "border-tui-border text-tui-text-muted hover:text-tui-text hover:border-tui-border"
+                                }`}
+                            >
+                                <Star className={`h-3.5 w-3.5 ${item.favorite ? "fill-current" : ""}`} />
+                                <span>{item.favorite ? "FAVORITED" : "FAVORITE"}</span>
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                                className="px-3 py-1.5 border border-tui-border text-tui-text-muted hover:text-tui-text hover:border-tui-border transition-all uppercase tracking-wider flex items-center gap-1.5"
+                            >
+                                <Edit className="h-3.5 w-3.5" />
+                                <span>EDIT</span>
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setDeleteConfirm(true); }}
+                                className="px-3 py-1.5 border border-tui-red/30 text-tui-red bg-tui-red/10 hover:border-tui-red hover:bg-tui-red/5 transition-all uppercase tracking-wider flex items-center gap-1.5"
+                            >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span>DELETE</span>
+                            </button>
                         </div>
-
-                    </motion.div>
+                    </div>
                 </motion.div>
             </div>
 
-            {/* Delete Confirmation Modal */}
+            {/* TUI Delete Confirmation Modal */}
             <AnimatePresence>
                 {deleteConfirm && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm"
                         onClick={() => setDeleteConfirm(false)}
                     >
                         <motion.div
@@ -226,22 +216,26 @@ export default function ExpandableCardOverlay({
                             animate={{ scale: 1 }}
                             exit={{ scale: 0.95 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-full max-w-sm bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl p-6"
+                            className="w-full max-w-sm bg-tui-panel border border-tui-red p-6 font-mono text-xs"
                         >
-                            <h3 className="text-lg font-semibold text-white mb-2">Delete Item</h3>
-                            <p className="text-sm text-neutral-400 mb-6">Are you sure you want to delete this item? This action cannot be undone.</p>
-                            <div className="flex items-center justify-end gap-3">
+                            <div className="text-tui-red font-bold text-sm uppercase tracking-wider mb-2">
+                                ! WARNING: DESTRUCTIVE_ACTION
+                            </div>
+                            <p className="text-tui-text-muted mb-6">
+                                ARE YOU SURE YOU WANT TO DELETE THIS TITLE? THIS OPERATION CANNOT BE UNDONE.
+                            </p>
+                            <div className="flex items-center justify-end gap-3 font-bold">
                                 <button
                                     onClick={() => setDeleteConfirm(false)}
-                                    className="px-4 py-2 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors"
+                                    className="px-4 py-2 border border-tui-border text-tui-text-muted hover:text-tui-text hover:border-tui-border uppercase transition-all"
                                 >
-                                    Cancel
+                                    [ NO, CANCEL ]
                                 </button>
                                 <button
                                     onClick={() => { setDeleteConfirm(false); onDelete(); }}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                                    className="px-4 py-2 border border-tui-red bg-tui-red/15 text-tui-red hover:bg-tui-red hover:text-tui-text uppercase transition-all"
                                 >
-                                    Delete
+                                    [ YES, DELETE ]
                                 </button>
                             </div>
                         </motion.div>

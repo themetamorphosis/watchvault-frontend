@@ -54,7 +54,7 @@ export function useLibraryFilters(items: Item[], mediaType: MediaType, mode: "li
     const q = query.trim().toLowerCase();
     let arr = pageItems.slice();
 
-    if (mode === "library" && onlyFav) arr = arr.filter((i) => i.favorite);
+    if (onlyFav) arr = arr.filter((i) => i.favorite);
 
     if (q) {
       arr = arr.filter((i) => {

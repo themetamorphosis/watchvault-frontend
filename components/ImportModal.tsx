@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useRef } from "react";
 import type { Item, MediaType, Status } from "@/lib/types";
-import { FileText, FileJson, FileSpreadsheet, X } from "lucide-react";
+
 type Parsed = {
   title: string;
   year?: number;
@@ -172,48 +172,45 @@ export default function ImportModal({
   const previewSliced = parsedPreview.slice(0, 6);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-xl rounded-2xl bg-[#0a0a0a] ring-1 ring-white/10 shadow-2xl flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between border-b border-white/10 p-5 shrink-0">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 p-4 font-mono text-xs">
+      <div className="w-full max-w-xl bg-tui-panel border border-tui-border shadow-2xl flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-tui-border-muted p-4 bg-tui-bg/30 shrink-0">
           <div>
-            <div className="text-xs font-semibold tracking-wider text-white/50 uppercase mb-1">Import</div>
-            <div className="text-xl font-bold tracking-tight text-white">Paste or upload list</div>
+            <div className="text-[9px] font-semibold tracking-wider text-tui-text-muted uppercase mb-0.5">// COLLECTION_IMPORT</div>
+            <div className="text-sm font-bold tracking-tight text-tui-text uppercase">PASTE OR UPLOAD LIST</div>
           </div>
 
           <button
             onClick={onClose}
-            className="rounded-xl bg-white/[0.04] p-2 hover:bg-white/[0.08] text-white/60 hover:text-white transition-colors"
+            className="px-2.5 py-1 border border-tui-border text-tui-text-muted hover:border-tui-text hover:text-tui-text uppercase transition-all"
+            title="Close modal"
           >
-            <X className="w-5 h-5" />
+            [X]
           </button>
         </div>
 
-        <div className="p-5 flex-1 overflow-y-auto">
-
-          <div className="flex gap-2 mb-4">
+        {/* Content */}
+        <div className="p-5 flex-1 overflow-y-auto space-y-4">
+          {/* File Upload buttons */}
+          <div className="flex gap-2">
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-colors border border-white/[0.08] border-dashed text-sm font-medium text-white/70 hover:text-white"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 border border-tui-border text-tui-text-muted bg-tui-bg hover:text-tui-text hover:border-tui-text hover:bg-tui-input/50 transition-all uppercase"
             >
-              <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Upload .TXT</span>
-              <span className="sm:hidden">.TXT</span>
+              [ UPLOAD .TXT ]
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-colors border border-white/[0.08] border-dashed text-sm font-medium text-white/70 hover:text-white"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 border border-tui-border text-tui-text-muted bg-tui-bg hover:text-tui-text hover:border-tui-text hover:bg-tui-input/50 transition-all uppercase"
             >
-              <FileSpreadsheet className="w-4 h-4" />
-              <span className="hidden sm:inline">Upload .CSV</span>
-              <span className="sm:hidden">.CSV</span>
+              [ UPLOAD .CSV ]
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-colors border border-white/[0.08] border-dashed text-sm font-medium text-white/70 hover:text-white"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 border border-tui-border text-tui-text-muted bg-tui-bg hover:text-tui-text hover:border-tui-text hover:bg-tui-input/50 transition-all uppercase"
             >
-              <FileJson className="w-4 h-4" />
-              <span className="hidden sm:inline">Upload .JSON</span>
-              <span className="sm:hidden">.JSON</span>
+              [ UPLOAD .JSON ]
             </button>
             <input
               type="file"
@@ -224,60 +221,65 @@ export default function ImportModal({
             />
           </div>
 
-          <div className="relative group">
+          {/* Textarea for bulk paste */}
+          <div className="space-y-1">
+            <label className="text-[10px] text-tui-text-muted uppercase font-bold tracking-wider select-none">
+              PASTE COLLECTION DATA HERE &gt;
+            </label>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder={
                 tab === "movie"
-                  ? `Example (Text):\nThe Godfather (1972)\nInception (2010)\n\nExample (CSV):\nTitle,Year\nThe Godfather,1972\n\nExample (JSON):\n[{"title":"Inception", "year":2010}]`
-                  : `Example (Text):\nDark (2017–2020)\n\nExample (CSV):\nTitle,Year,Status\nDark,2017,Ended\n\nExample (JSON):\n[{"title":"Dark", "year":2017}]`
+                  ? `EXAMPLE (TEXT):\nTHE GODFATHER (1972)\nINCEPTION (2010)\n\nEXAMPLE (CSV):\nTITLE,YEAR\nTHE GODFATHER,1972\n\nEXAMPLE (JSON):\n[{"title":"INCEPTION", "year":2010}]`
+                  : `EXAMPLE (TEXT):\nDARK (2017–2020)\n\nEXAMPLE (CSV):\nTITLE,YEAR,STATUS\nDARK,2017,ENDED\n\nEXAMPLE (JSON):\n[{"title":"DARK", "year":2017}]`
               }
-              className="h-44 w-full resize-none rounded-2xl bg-white/[0.02] p-4 text-sm text-white placeholder:text-white/20 ring-1 ring-white/10 outline-none focus:ring-2 focus:ring-white/20 focus:bg-white/[0.04] transition-all scrollbar-hide"
+              className="h-44 w-full resize-none bg-tui-input border border-tui-border p-4 text-xs text-tui-text placeholder:text-tui-text-muted/30 outline-none focus:border-tui-amber transition-all scrollbar-thin uppercase"
             />
           </div>
 
-          <div className="mt-4 rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
+          {/* Preview Panel */}
+          <div className="border border-tui-border-muted bg-tui-bg/30 p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="text-xs font-medium uppercase tracking-wider text-white/40">Preview</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-tui-text-muted">// IMPORT_PREVIEW</div>
               {parsedPreview.length > 0 && (
-                <div className="text-xs font-medium text-white/40">{parsedPreview.length} {parsedPreview.length === 1 ? 'item' : 'items'} total</div>
+                <div className="text-[10px] font-bold text-tui-text-muted uppercase">{parsedPreview.length} {parsedPreview.length === 1 ? 'ITEM' : 'ITEMS'} DETECTED</div>
               )}
             </div>
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2">
               {previewSliced.length ? (
                 previewSliced.map((p, idx) => (
-                  <div key={idx} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-white/[0.03]">
-                    <div className="truncate font-medium text-white/90">{p.title}</div>
-                    <div className="text-white/50 text-xs px-2 py-1 rounded-md bg-white/[0.06] font-medium shrink-0">{formatYears(p)}</div>
+                  <div key={idx} className="flex items-center justify-between gap-3 px-3 py-1.5 border border-tui-border bg-tui-panel/40">
+                    <div className="truncate font-bold text-tui-text uppercase">{p.title}</div>
+                    <div className="text-tui-text-muted text-[10px] px-1.5 py-0.5 border border-tui-border-muted font-medium shrink-0">{formatYears(p)}</div>
                   </div>
                 ))
               ) : (
-                <div className="text-white/30 text-center py-4 text-sm">Paste lines or upload a file to see preview…</div>
+                <div className="text-tui-text-muted/50 text-center py-4 uppercase">PASTE LINES OR UPLOAD A FILE TO SEE PREVIEW...</div>
               )}
             </div>
           </div>
-
         </div>
 
-        <div className="p-4 border-t border-white/10 shrink-0 flex items-center justify-between bg-black/50 rounded-b-2xl">
-          <div className="text-xs text-white/40 leading-relaxed hidden sm:block">
-            Supports <span className="text-white/60">JSON Arrays</span>, <span className="text-white/60">CSV w/ headers</span>, <span className="text-white/60">Plain text lists</span>
+        {/* Footer */}
+        <div className="p-4 border-t border-tui-border-muted shrink-0 flex items-center justify-between bg-tui-bg/30">
+          <div className="text-[9px] text-tui-text-muted leading-relaxed hidden sm:block uppercase font-semibold">
+            FORMATS: <span className="text-tui-text">JSON ARRAYS</span> | <span className="text-tui-text">CSV WITH HEADER</span> | <span className="text-tui-text">PLAIN TEXT</span>
           </div>
-          <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto">
+          <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto font-bold justify-end">
             <button
               onClick={() => setText("")}
-              className="flex-1 sm:flex-none rounded-xl px-4 py-2.5 text-sm font-medium text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+              className="px-4 py-2.5 border border-tui-border text-tui-text-muted hover:border-tui-text hover:text-tui-text transition-all uppercase"
             >
-              Clear
+              [ CLEAR ]
             </button>
 
             <button
               onClick={() => onImport(buildItems())}
               disabled={!text.trim() || parsedPreview.length === 0}
-              className="flex-1 sm:flex-none rounded-xl bg-white px-6 py-2.5 text-sm font-bold text-black hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2.5 border border-tui-border bg-tui-text text-tui-bg hover:bg-tui-text/90 transition-all uppercase disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              Import {parsedPreview.length > 0 ? parsedPreview.length : ''} Titles
+              [ IMPORT {parsedPreview.length > 0 ? `${parsedPreview.length} ` : ''}ENTRIES ]
             </button>
           </div>
         </div>
