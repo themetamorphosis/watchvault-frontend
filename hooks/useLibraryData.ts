@@ -1,8 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback, useTransition, useRef } from "react";
-import type { Item, MediaType, Status } from "@/lib/types";
-import { getItems, upsertItem, deleteItem, toggleFavorite, importItems as importItemsAction, updateMetadata } from "@/app/actions/items";
+import { toast } from "sonner";
+import type { Item } from "@/lib/types";
+import {
+  getItems,
+  upsertItem,
+  deleteItem,
+  toggleFavorite,
+  importItems as importItemsAction,
+  updateMetadata,
+} from "@/app/actions/items";
 import { fetchPoster } from "@/lib/poster";
 
 export function useLibraryData(userId: string) {
@@ -56,34 +64,44 @@ export function useLibraryData(userId: string) {
   }, [items, ready, userId]);
 
   const refreshItems = useCallback(() => {
-    getItems().then(setItems).catch((e) => console.error("Refresh failed:", e));
+    getItems()
+      .then(setItems)
+      .catch((e) => console.error("Refresh failed:", e));
   }, []);
 
   // Poster enrichment
   const ensureCover = useCallback(async (it: Item): Promise<void> => {
-    if (it.coverUrl && it.genres && it.genres.length > 0 && it.description) return;
+    if (it.coverUrl && it.genres && it.genres.length > 0 && it.description)
+      return;
 
     let fetchResult;
     try {
       fetchResult = await fetchPoster(it.title, it.mediaType, it.year);
     } catch (e) {
       console.error("Poster fetch failed:", e);
-      try { sessionStorage.setItem(`wv-poster-skip-${it.id}`, "1"); } catch {}
+      try {
+        sessionStorage.setItem(`wv-poster-skip-${it.id}`, "1");
+      } catch {}
       return;
     }
 
     if (!fetchResult) {
-      try { sessionStorage.setItem(`wv-poster-skip-${it.id}`, "1"); } catch {}
+      try {
+        sessionStorage.setItem(`wv-poster-skip-${it.id}`, "1");
+      } catch {}
       return;
     }
 
     const { coverUrl, genres, description } = fetchResult;
     const hasNewCover = !it.coverUrl && coverUrl;
-    const hasNewGenres = (!it.genres || it.genres.length === 0) && genres && genres.length > 0;
+    const hasNewGenres =
+      (!it.genres || it.genres.length === 0) && genres && genres.length > 0;
     const hasNewDesc = !it.description && description;
 
     if (!hasNewCover && !hasNewGenres && !hasNewDesc) {
-      try { sessionStorage.setItem(`wv-poster-skip-${it.id}`, "1"); } catch {}
+      try {
+        sessionStorage.setItem(`wv-poster-skip-${it.id}`, "1");
+      } catch {}
       return;
     }
 
@@ -114,42 +132,86 @@ export function useLibraryData(userId: string) {
     (next: Omit<Item, "id" | "createdAt" | "updatedAt">, id?: string) => {
       const now = Date.now();
       if (id) {
-        setItems((prev) => prev.map((p) => (p.id === id ? { ...p, ...next, updatedAt: now } : p)));
-        startTransition(() => {
-          upsertItem({ ...next, id });
+        const prev = items;
+        setItems((prev) =>
+          prev.map((p) =>
+            p.id === id ? { ...p, ...next, updatedAt: now } : p,
+          ),
+        );
+        startTransition(async () => {
+          const result = await upsertItem({ ...next, id });
+          if (!result.success) {
+            setItems(prev);
+            toast.error("Update failed — changes reverted");
+          }
         });
       } else {
         const tempId = crypto.randomUUID?.() ?? String(now);
-        setItems((prev) => [{ id: tempId, createdAt: now, updatedAt: now, ...next }, ...prev]);
+        const prev = items;
+        setItems((prev) => [
+          { id: tempId, createdAt: now, updatedAt: now, ...next },
+          ...prev,
+        ]);
         startTransition(async () => {
-          await upsertItem(next);
-          refreshItems();
+          const result = await upsertItem(next);
+          if (!result.success) {
+            setItems(prev);
+            toast.error("Create failed — item removed");
+          } else {
+            refreshItems();
+          }
         });
       }
     },
-    [refreshItems],
+    [items, refreshItems],
   );
 
-  const handleDelete = useCallback((id: string) => {
-    setItems((prev) => prev.filter((p) => p.id !== id));
-    startTransition(() => {
-      deleteItem(id);
-    });
-  }, []);
+  const handleDelete = useCallback(
+    (id: string) => {
+      const prev = items;
+      setItems((prev) => prev.filter((p) => p.id !== id));
+      startTransition(async () => {
+        const result = await deleteItem(id);
+        if (!result.success) {
+          setItems(prev);
+          toast.error("Delete failed — item restored");
+        }
+      });
+    },
+    [items],
+  );
 
-  const handleToggleFav = useCallback((id: string) => {
-    setItems((prev) => prev.map((p) => (p.id === id ? { ...p, favorite: !p.favorite, updatedAt: Date.now() } : p)));
-    startTransition(() => {
-      toggleFavorite(id);
-    });
-  }, []);
+  const handleToggleFav = useCallback(
+    (id: string) => {
+      const prev = items;
+      setItems((prev) =>
+        prev.map((p) =>
+          p.id === id
+            ? { ...p, favorite: !p.favorite, updatedAt: Date.now() }
+            : p,
+        ),
+      );
+      startTransition(async () => {
+        const result = await toggleFavorite(id);
+        if (!result.success) {
+          setItems(prev);
+          toast.error("Favorite toggle failed — reverted");
+        }
+      });
+    },
+    [items],
+  );
 
   const handleImport = useCallback(
     (newItems: Item[]) => {
       // Add items to local state immediately for responsive UI
       setItems((prev) => {
         const map = new Map<string, Item>();
-        for (const p of prev) map.set(`${p.mediaType}::${p.title.toLowerCase()}::${p.year ?? ""}`, p);
+        for (const p of prev)
+          map.set(
+            `${p.mediaType}::${p.title.toLowerCase()}::${p.year ?? ""}`,
+            p,
+          );
         for (const n of newItems) {
           const k = `${n.mediaType}::${n.title.toLowerCase()}::${n.year ?? ""}`;
           if (!map.has(k)) map.set(k, n);
@@ -172,9 +234,18 @@ export function useLibraryData(userId: string) {
             runtime: n.runtime,
           })),
         );
-        // Only refresh after batch import completes to avoid stale-overwrites-fresh race
-        if (result && typeof result === "object" && "imported" in result && (result as { imported: number }).imported > 0) {
-          // Small delay to let backend finish background enrichment
+        if (!result || !("success" in result) || !result.success) {
+          toast.error("Import failed — please try again");
+          refreshItems();
+          return;
+        }
+        if (
+          "imported" in result &&
+          (result as { imported: number }).imported > 0
+        ) {
+          toast.success(
+            `Imported ${(result as { imported: number }).imported} items`,
+          );
           setTimeout(() => refreshItems(), 1500);
         }
       });

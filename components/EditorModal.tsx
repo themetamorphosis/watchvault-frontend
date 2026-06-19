@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import type { Item, Status } from "@/lib/types";
 import { Star, Trash2 } from "lucide-react";
 import { useModalA11y } from "@/hooks/useModalA11y";
@@ -47,12 +47,21 @@ export default function EditorModal({
   }
 
   return (
-    <div ref={containerRef} role="dialog" aria-modal="true" aria-label="Edit media item" onKeyDown={trapFocus} className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 p-4 font-mono text-xs">
+    <div
+      ref={containerRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Edit media item"
+      onKeyDown={trapFocus}
+      className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 p-4 font-mono text-xs"
+    >
       <div className="w-full max-w-lg bg-tui-panel border border-tui-border shadow-2xl">
         {/* Header */}
         <div className="p-4 border-b border-tui-border-muted flex items-center justify-between bg-tui-bg/30">
           <div>
-            <div className="text-[9px] text-tui-text-muted uppercase tracking-widest">// EDIT_ENTRY_DATA</div>
+            <div className="text-[9px] text-tui-text-muted uppercase tracking-widest">
+              {/* EDIT_ENTRY_DATA */}
+            </div>
             <div className="text-sm font-bold text-tui-text uppercase tracking-wider mt-0.5">
               {item.title || "NEW ENTRY"}
             </div>
@@ -137,7 +146,10 @@ export default function EditorModal({
               onChange={(e) =>
                 set(
                   "genres",
-                  e.target.value.split(",").map((g) => g.trim()).filter(Boolean)
+                  e.target.value
+                    .split(",")
+                    .map((g) => g.trim())
+                    .filter(Boolean),
                 )
               }
               placeholder="ACTION, SCI-FI, DRAMA"
@@ -186,7 +198,9 @@ export default function EditorModal({
                 : "border-tui-border text-tui-text-muted hover:text-tui-text hover:border-tui-text"
             }`}
           >
-            <Star className={`h-3.5 w-3.5 ${item.favorite ? "fill-current" : ""}`} />
+            <Star
+              className={`h-3.5 w-3.5 ${item.favorite ? "fill-current" : ""}`}
+            />
             <span>{item.favorite ? "FAVORITED" : "FAVORITE"}</span>
           </button>
 

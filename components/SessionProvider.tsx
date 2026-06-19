@@ -1,69 +1,95 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import { getSession } from "@/app/actions/auth";
 
 export type User = {
-    id: string;
-    name: string | null;
-    email: string;
-    image: string | null;
+  id: string;
+  name: string | null;
+  email: string;
+  image: string | null;
 };
 
 export type Session = {
-    user: User;
+  user: User;
 } | null;
 
 interface SessionContextValue {
-    data: Session;
-    status: "loading" | "authenticated" | "unauthenticated";
-    update: () => Promise<void>;
+  data: Session;
+  status: "loading" | "authenticated" | "unauthenticated";
+  update: () => Promise<void>;
 }
 
-const SessionContext = createContext<SessionContextValue | undefined>(undefined);
+const SessionContext = createContext<SessionContextValue | undefined>(
+  undefined,
+);
 
-export default function SessionProvider({ children, session: initialSession }: { children: React.ReactNode, session?: Session }) {
-    const [session, setSession] = useState<Session>(initialSession || null);
-    const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">(
-        initialSession ? "authenticated" : "loading"
-    );
+export default function SessionProvider({
+  children,
+  session: initialSession,
+}: {
+  children: React.ReactNode;
+  session?: Session;
+}) {
+  const [session, setSession] = useState<Session>(initialSession || null);
+  const [status, setStatus] = useState<
+    "loading" | "authenticated" | "unauthenticated"
+  >(initialSession ? "authenticated" : "loading");
 
-    const update = useCallback(async () => {
-        try {
-            const user = await getSession();
-            if (user) {
-                setSession({ user });
-                setStatus("authenticated");
-            } else {
-                setSession(null);
-                setStatus("unauthenticated");
-            }
-        } catch {
-            setSession(null);
-            setStatus("unauthenticated");
+  const update = useCallback(async () => {
+    try {
+      const user = await getSession();
+      if (user) {
+        setSession({ user });
+        setStatus("authenticated");
+      } else {
+        setSession(null);
+        setStatus("unauthenticated");
+      }
+    } catch {
+      setSession(null);
+      setStatus("unauthenticated");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (initialSession) return;
+
+    getSession()
+      .then((user) => {
+        if (user) {
+          setSession({ user });
+          setStatus("authenticated");
+        } else {
+          setSession(null);
+          setStatus("unauthenticated");
         }
-    }, []);
+      })
+      .catch(() => {
+        setSession(null);
+        setStatus("unauthenticated");
+      });
+  }, [initialSession]);
 
-    useEffect(() => {
-        if (!initialSession) {
-            update();
-        }
-    }, [initialSession, update]);
-
-
-    return (
-        <SessionContext.Provider value={{ data: session, status, update }}>
-            {children}
-        </SessionContext.Provider>
-    );
+  return (
+    <SessionContext.Provider value={{ data: session, status, update }}>
+      {children}
+    </SessionContext.Provider>
+  );
 }
 
 export function useSession() {
-    const context = useContext(SessionContext);
-    if (context === undefined) {
-        throw new Error("useSession must be used within a SessionProvider");
-    }
-    return context;
+  const context = useContext(SessionContext);
+  if (context === undefined) {
+    throw new Error("useSession must be used within a SessionProvider");
+  }
+  return context;
 }
 
 export { signOut } from "@/lib/auth";

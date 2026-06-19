@@ -28,10 +28,7 @@ function parseTitleAndYears(raw: string, mediaType: MediaType): Parsed {
 
   if (!inside) return { title };
 
-  const norm = inside
-    .replace(/[—–]/g, "-")
-    .replace(/\s+/g, " ")
-    .trim();
+  const norm = inside.replace(/[—–]/g, "-").replace(/\s+/g, " ").trim();
 
   const isRunningWord = /running|ongoing|still running|present/i.test(norm);
 
@@ -42,12 +39,24 @@ function parseTitleAndYears(raw: string, mediaType: MediaType): Parsed {
 
   const range = norm.match(/\b(\d{4})\s*-\s*(\d{4})\b/);
   if (range) {
-    return { title, year: Number(range[1]), endYear: Number(range[2]), running: false };
+    return {
+      title,
+      year: Number(range[1]),
+      endYear: Number(range[2]),
+      running: false,
+    };
   }
 
-  const startRunning = norm.match(/\b(\d{4})\s*-\s*(running|ongoing|present)\b/i);
+  const startRunning = norm.match(
+    /\b(\d{4})\s*-\s*(running|ongoing|present)\b/i,
+  );
   if (startRunning) {
-    return { title, year: Number(startRunning[1]), endYear: undefined, running: true };
+    return {
+      title,
+      year: Number(startRunning[1]),
+      endYear: undefined,
+      running: true,
+    };
   }
 
   if (isRunningWord && !norm.match(/\d{4}/)) {
@@ -56,7 +65,11 @@ function parseTitleAndYears(raw: string, mediaType: MediaType): Parsed {
 
   const single = norm.match(/\b(\d{4})\b/);
   if (single) {
-    return { title, year: Number(single[1]), running: isRunningWord || undefined };
+    return {
+      title,
+      year: Number(single[1]),
+      running: isRunningWord || undefined,
+    };
   }
 
   return { title };
@@ -78,7 +91,7 @@ export default function ImportModal({
   const [tab] = useState<MediaType>(defaultMediaType);
   const [text, setText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { containerRef, trapFocus } = useModalA11y(onClose);
+  useModalA11y(onClose);
 
   const parsedPreview = useMemo(() => {
     if (!text.trim()) return [];
@@ -87,42 +100,63 @@ export default function ImportModal({
     try {
       const data = JSON.parse(text);
       if (Array.isArray(data)) {
-        return data.map((item: Record<string, unknown>) => {
-          if (typeof item === 'string') return parseTitleAndYears(item as string, tab);
-          return {
-            title: (item.title as string) || (item.name as string) || '',
-            year: item.year ? Number(item.year) : undefined,
-            endYear: item.endYear ? Number(item.endYear) : undefined,
-            running: !!item.running || item.status === 'running' || item.status === 'ongoing',
-          };
-        }).filter(x => x.title);
+        return data
+          .map((item: Record<string, unknown>) => {
+            if (typeof item === "string")
+              return parseTitleAndYears(item as string, tab);
+            return {
+              title: (item.title as string) || (item.name as string) || "",
+              year: item.year ? Number(item.year) : undefined,
+              endYear: item.endYear ? Number(item.endYear) : undefined,
+              running:
+                !!item.running ||
+                item.status === "running" ||
+                item.status === "ongoing",
+            };
+          })
+          .filter((x) => x.title);
       }
     } catch {
       // Ignore: Not JSON array
     }
 
-    const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const lines = text
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
 
     // 2. Try CSV with header (comma separated)
     if (lines.length > 0) {
       const header = lines[0].toLowerCase();
-      if (header.includes(',') && (header.includes('title') || header.includes('name'))) {
-        const columns = header.split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
-        const titleIdx = columns.findIndex(c => c === 'title' || c === 'name');
-        const yearIdx = columns.findIndex(c => c === 'year' || c === 'release year');
-        const statusIdx = columns.findIndex(c => c === 'status');
+      if (
+        header.includes(",") &&
+        (header.includes("title") || header.includes("name"))
+      ) {
+        const columns = header
+          .split(",")
+          .map((c) => c.trim().replace(/^["']|["']$/g, ""));
+        const titleIdx = columns.findIndex(
+          (c) => c === "title" || c === "name",
+        );
+        const yearIdx = columns.findIndex(
+          (c) => c === "year" || c === "release year",
+        );
+        const statusIdx = columns.findIndex((c) => c === "status");
 
         const out = [];
         for (let i = 1; i < lines.length; i++) {
-          const parts = lines[i].split(',').map(p => p.trim().replace(/^["']|["']$/g, ''));
+          const parts = lines[i]
+            .split(",")
+            .map((p) => p.trim().replace(/^["']|["']$/g, ""));
           const title = titleIdx >= 0 ? parts[titleIdx] : parts[0];
           const year = yearIdx >= 0 ? parseInt(parts[yearIdx], 10) : undefined;
           let running = false;
           if (statusIdx >= 0 && parts[statusIdx]) {
             const stat = parts[statusIdx].toLowerCase();
-            running = stat.includes('running') || stat.includes('ongoing');
+            running = stat.includes("running") || stat.includes("ongoing");
           }
-          if (title) out.push({ title, year: isNaN(year!) ? undefined : year, running });
+          if (title)
+            out.push({ title, year: isNaN(year!) ? undefined : year, running });
         }
         return out;
       }
@@ -163,12 +197,12 @@ export default function ImportModal({
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target?.result;
-      if (typeof content === 'string') {
+      if (typeof content === "string") {
         setText(content);
       }
     };
     reader.readAsText(file);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const previewSliced = parsedPreview.slice(0, 6);
@@ -179,8 +213,12 @@ export default function ImportModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-tui-border-muted p-4 bg-tui-bg/30 shrink-0">
           <div>
-            <div className="text-[9px] font-semibold tracking-wider text-tui-text-muted uppercase mb-0.5">// COLLECTION_IMPORT</div>
-            <div className="text-sm font-bold tracking-tight text-tui-text uppercase">PASTE OR UPLOAD LIST</div>
+            <div className="text-[9px] font-semibold tracking-wider text-tui-text-muted uppercase mb-0.5">
+              {/* COLLECTION_IMPORT */}
+            </div>
+            <div className="text-sm font-bold tracking-tight text-tui-text uppercase">
+              PASTE OR UPLOAD LIST
+            </div>
           </div>
 
           <button
@@ -243,21 +281,35 @@ export default function ImportModal({
           {/* Preview Panel */}
           <div className="border border-tui-border-muted bg-tui-bg/30 p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-tui-text-muted">// IMPORT_PREVIEW</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-tui-text-muted">
+                {/* IMPORT_PREVIEW */}
+              </div>
               {parsedPreview.length > 0 && (
-                <div className="text-[10px] font-bold text-tui-text-muted uppercase">{parsedPreview.length} {parsedPreview.length === 1 ? 'ITEM' : 'ITEMS'} DETECTED</div>
+                <div className="text-[10px] font-bold text-tui-text-muted uppercase">
+                  {parsedPreview.length}{" "}
+                  {parsedPreview.length === 1 ? "ITEM" : "ITEMS"} DETECTED
+                </div>
               )}
             </div>
             <div className="space-y-2">
               {previewSliced.length ? (
                 previewSliced.map((p, idx) => (
-                  <div key={idx} className="flex items-center justify-between gap-3 px-3 py-1.5 border border-tui-border bg-tui-panel/40">
-                    <div className="truncate font-bold text-tui-text uppercase">{p.title}</div>
-                    <div className="text-tui-text-muted text-[10px] px-1.5 py-0.5 border border-tui-border-muted font-medium shrink-0">{formatYears(p)}</div>
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between gap-3 px-3 py-1.5 border border-tui-border bg-tui-panel/40"
+                  >
+                    <div className="truncate font-bold text-tui-text uppercase">
+                      {p.title}
+                    </div>
+                    <div className="text-tui-text-muted text-[10px] px-1.5 py-0.5 border border-tui-border-muted font-medium shrink-0">
+                      {formatYears(p)}
+                    </div>
                   </div>
                 ))
               ) : (
-                <div className="text-tui-text-muted/50 text-center py-4 uppercase">PASTE LINES OR UPLOAD A FILE TO SEE PREVIEW...</div>
+                <div className="text-tui-text-muted/50 text-center py-4 uppercase">
+                  PASTE LINES OR UPLOAD A FILE TO SEE PREVIEW...
+                </div>
               )}
             </div>
           </div>
@@ -266,7 +318,9 @@ export default function ImportModal({
         {/* Footer */}
         <div className="p-4 border-t border-tui-border-muted shrink-0 flex items-center justify-between bg-tui-bg/30">
           <div className="text-[9px] text-tui-text-muted leading-relaxed hidden sm:block uppercase font-semibold">
-            FORMATS: <span className="text-tui-text">JSON ARRAYS</span> | <span className="text-tui-text">CSV WITH HEADER</span> | <span className="text-tui-text">PLAIN TEXT</span>
+            FORMATS: <span className="text-tui-text">JSON ARRAYS</span> |{" "}
+            <span className="text-tui-text">CSV WITH HEADER</span> |{" "}
+            <span className="text-tui-text">PLAIN TEXT</span>
           </div>
           <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto font-bold justify-end">
             <button
@@ -281,7 +335,9 @@ export default function ImportModal({
               disabled={!text.trim() || parsedPreview.length === 0}
               className="px-4 py-2.5 border border-tui-border bg-tui-text text-tui-bg hover:bg-tui-text/90 transition-all uppercase disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              [ IMPORT {parsedPreview.length > 0 ? `${parsedPreview.length} ` : ''}ENTRIES ]
+              [ IMPORT{" "}
+              {parsedPreview.length > 0 ? `${parsedPreview.length} ` : ""}
+              ENTRIES ]
             </button>
           </div>
         </div>

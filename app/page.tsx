@@ -16,8 +16,6 @@ import { useSession } from "@/components/SessionProvider";
 import CountUp from "react-countup";
 import {
   Film,
-  Tv,
-  Sparkles,
   ChevronDown,
   Heart,
   Clock,
@@ -111,7 +109,12 @@ function AnimatedStat({
       <motion.div
         initial={{ scale: 0.5, opacity: 0 }}
         animate={inView ? { scale: 1, opacity: 1 } : {}}
-        transition={{ duration: 0.5, delay: delay + 0.2, type: "spring", stiffness: 200 }}
+        transition={{
+          duration: 0.5,
+          delay: delay + 0.2,
+          type: "spring",
+          stiffness: 200,
+        }}
         className="inline-flex items-center justify-center h-11 w-11 rounded-xl bg-white/[0.04] border border-white/[0.06]"
       >
         <Icon className="h-5 w-5 text-white/40" />
@@ -120,10 +123,15 @@ function AnimatedStat({
         {typeof value === "number" && inView ? (
           <CountUp end={value} duration={2.5} delay={delay} suffix={suffix} />
         ) : (
-          <span>{value}{suffix}</span>
+          <span>
+            {value}
+            {suffix}
+          </span>
         )}
       </div>
-      <div className="text-sm text-white/40 font-medium tracking-wide">{label}</div>
+      <div className="text-sm text-white/40 font-medium tracking-wide">
+        {label}
+      </div>
     </motion.div>
   );
 }
@@ -170,20 +178,35 @@ function FloatingOrbs({ variant = "hero" }: { variant?: "hero" | "cta" }) {
         <div className="orb orb-1" style={{ top: "10%", left: "5%" }} />
         <div className="orb orb-2" style={{ top: "30%", right: "10%" }} />
         <div className="orb orb-3" style={{ bottom: "20%", left: "30%" }} />
-        <div className="orb orb-2" style={{ bottom: "10%", right: "25%", opacity: 0.5 }} />
+        <div
+          className="orb orb-2"
+          style={{ bottom: "10%", right: "25%", opacity: 0.5 }}
+        />
       </div>
     );
   }
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="orb orb-1" style={{ top: "20%", left: "15%", opacity: 0.5 }} />
-      <div className="orb orb-3" style={{ bottom: "15%", right: "20%", opacity: 0.4 }} />
+      <div
+        className="orb orb-1"
+        style={{ top: "20%", left: "15%", opacity: 0.5 }}
+      />
+      <div
+        className="orb orb-3"
+        style={{ bottom: "15%", right: "20%", opacity: 0.4 }}
+      />
     </div>
   );
 }
 
 /* ─── Word-by-word stagger reveal ─── */
-function StaggerHeadline({ text, className = "" }: { text: string; className?: string }) {
+function StaggerHeadline({
+  text,
+  className = "",
+}: {
+  text: string;
+  className?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
   const words = text.split(" ");
@@ -302,7 +325,6 @@ export default function HomePage() {
     offset: ["start start", "end start"],
   });
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.8], [1, 0.92]);
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 100]);
 
   const [activeCat, setActiveCat] = useState(0);
@@ -364,7 +386,11 @@ export default function HomePage() {
                 <Link
                   href="/dashboard"
                   className="wv-capsule-cta"
-                  style={{ background: 'rgba(255,255,255,0.92)', color: '#0a0a0a', border: '1px solid rgba(255,255,255,0.25)' }}
+                  style={{
+                    background: "rgba(255,255,255,0.92)",
+                    color: "#0a0a0a",
+                    border: "1px solid rgba(255,255,255,0.25)",
+                  }}
                 >
                   <span className="relative inline-flex items-center justify-center h-5.5 w-5.5 rounded-full overflow-hidden border border-white/15 flex-shrink-0 mr-2">
                     {session.user?.image ? (
@@ -390,7 +416,15 @@ export default function HomePage() {
                 >
                   Log in
                 </Link>
-                <Link href="/register" className="wv-capsule-cta" style={{ background: 'rgba(255,255,255,0.92)', color: '#0a0a0a', border: '1px solid rgba(255,255,255,0.25)' }}>
+                <Link
+                  href="/register"
+                  className="wv-capsule-cta"
+                  style={{
+                    background: "rgba(255,255,255,0.92)",
+                    color: "#0a0a0a",
+                    border: "1px solid rgba(255,255,255,0.25)",
+                  }}
+                >
                   Get Started
                 </Link>
               </>
@@ -405,11 +439,23 @@ export default function HomePage() {
           >
             <AnimatePresence mode="wait" initial={false}>
               {mobileMenuOpen ? (
-                <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
+                <motion.div
+                  key="x"
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
                   <X className="h-4 w-4" />
                 </motion.div>
               ) : (
-                <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
+                <motion.div
+                  key="menu"
+                  initial={{ rotate: 90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: -90, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
                   <Menu className="h-4 w-4" />
                 </motion.div>
               )}
@@ -451,7 +497,14 @@ export default function HomePage() {
                   >
                     <span className="inline-flex items-center justify-center h-6 w-6 rounded-full overflow-hidden border border-white/15 flex-shrink-0">
                       {session.user?.image ? (
-                        <Image src={session.user.image} alt="User avatar" width={48} height={48} className="h-full w-full object-cover" unoptimized />
+                        <Image
+                          src={session.user.image}
+                          alt="User avatar"
+                          width={48}
+                          height={48}
+                          className="h-full w-full object-cover"
+                          unoptimized
+                        />
                       ) : (
                         <span className="h-full w-full flex items-center justify-center bg-gradient-to-br from-rose-500/40 to-violet-500/40 text-[10px] font-bold">
                           {session.user?.name?.[0]?.toUpperCase() || "U"}
@@ -525,9 +578,7 @@ export default function HomePage() {
             </motion.div>
 
             {/* Headline with word stagger */}
-            <motion.h1
-              className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05]"
-            >
+            <motion.h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05]">
               <span className="block">
                 {["Track", "everything"].map((word, i) => (
                   <motion.span
@@ -542,7 +593,8 @@ export default function HomePage() {
                     className="text-gradient"
                     style={{ display: "inline-block" }}
                   >
-                    {word}{i === 0 ? "\u00A0" : ""}
+                    {word}
+                    {i === 0 ? "\u00A0" : ""}
                   </motion.span>
                 ))}
               </span>
@@ -560,7 +612,8 @@ export default function HomePage() {
                     className="text-gradient-animated"
                     style={{ display: "inline-block" }}
                   >
-                    {word}{i === 0 ? "\u00A0" : ""}
+                    {word}
+                    {i === 0 ? "\u00A0" : ""}
                   </motion.span>
                 ))}
               </span>
@@ -570,25 +623,41 @@ export default function HomePage() {
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              transition={{
+                delay: 0.5,
+                duration: 0.8,
+                ease: [0.22, 1, 0.36, 1],
+              }}
               className="mt-7 sm:mt-9 text-base sm:text-lg md:text-xl text-white/45 max-w-2xl mx-auto leading-relaxed"
             >
               Movies, TV series and anime — organized by watched, pending,
               wishlist and favorites.{" "}
-              <span className="text-white/65 font-medium">Clean. Fast. Yours.</span>
+              <span className="text-white/65 font-medium">
+                Clean. Fast. Yours.
+              </span>
             </motion.p>
 
             {/* CTA buttons — single strong CTA + scroll secondary */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              transition={{
+                delay: 0.7,
+                duration: 0.7,
+                ease: [0.22, 1, 0.36, 1],
+              }}
               className="mt-6 sm:mt-8 flex flex-wrap justify-center gap-4"
             >
-              <Link href={session ? "/dashboard" : "/login"} className="glass-btn-primary">
+              <Link
+                href={session ? "/dashboard" : "/login"}
+                className="glass-btn-primary"
+              >
                 <span>{session ? "Go to Dashboard" : "Get Started Free"}</span>
               </Link>
-              <button onClick={() => scrollToSection("features")} className="glass-btn-secondary">
+              <button
+                onClick={() => scrollToSection("features")}
+                className="glass-btn-secondary"
+              >
                 <span>See how it works</span>
                 <ChevronDown className="h-4 w-4 ml-1.5 opacity-60" />
               </button>
@@ -651,7 +720,10 @@ export default function HomePage() {
       </section>
 
       {/* ━━━ DEMO CARD ━━━ */}
-      <section id="demo" className="relative py-24 sm:py-32 px-6 sm:px-10 overflow-hidden scroll-mt-8">
+      <section
+        id="demo"
+        className="relative py-24 sm:py-32 px-6 sm:px-10 overflow-hidden scroll-mt-8"
+      >
         <div className="section-divider mb-24 sm:mb-32" />
         <div className="mx-auto max-w-[1400px]">
           <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
@@ -669,7 +741,8 @@ export default function HomePage() {
               </Reveal>
               <Reveal delay={0.1}>
                 <p className="text-base sm:text-lg text-white/35 mb-8 leading-relaxed">
-                  Explore the library, dashboard stats, and tracking workflow — all without signing up.
+                  Explore the library, dashboard stats, and tracking workflow —
+                  all without signing up.
                 </p>
               </Reveal>
               <Reveal delay={0.15}>
@@ -707,7 +780,11 @@ export default function HomePage() {
       </section>
 
       {/* ━━━ BENTO FEATURE GRID ━━━ */}
-      <section id="features" ref={featuresRef} className="relative py-24 sm:py-32 px-6 sm:px-10 scroll-mt-8">
+      <section
+        id="features"
+        ref={featuresRef}
+        className="relative py-24 sm:py-32 px-6 sm:px-10 scroll-mt-8"
+      >
         <div className="mx-auto max-w-[1400px]">
           <Reveal>
             <p className="text-xs font-semibold text-white/35 tracking-[0.2em] uppercase mb-4">
@@ -752,21 +829,45 @@ export default function HomePage() {
         <div className="section-divider mb-24 sm:mb-32" />
         <div className="mx-auto max-w-[1400px]">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 sm:gap-4 text-center">
-            <AnimatedStat value={3} label="Categories" icon={Layers} delay={0} />
-            <AnimatedStat value={4} label="List Types" icon={List} delay={0.15} />
-            <AnimatedStat value="∞" label="Tracking Modes" icon={Zap} delay={0.3} />
+            <AnimatedStat
+              value={3}
+              label="Categories"
+              icon={Layers}
+              delay={0}
+            />
+            <AnimatedStat
+              value={4}
+              label="List Types"
+              icon={List}
+              delay={0.15}
+            />
+            <AnimatedStat
+              value="∞"
+              label="Tracking Modes"
+              icon={Zap}
+              delay={0.3}
+            />
           </div>
         </div>
       </section>
 
       {/* ━━━ SHOWCASE: List Types ━━━ */}
-      <section id="organize" className="relative py-24 sm:py-32 px-6 sm:px-10 overflow-hidden scroll-mt-8">
+      <section
+        id="organize"
+        className="relative py-24 sm:py-32 px-6 sm:px-10 overflow-hidden scroll-mt-8"
+      >
         <div className="section-divider mb-24 sm:mb-32" />
 
         {/* Subtle bg orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="orb orb-3" style={{ top: "10%", right: "5%", opacity: 0.3 }} />
-          <div className="orb orb-1" style={{ bottom: "10%", left: "10%", opacity: 0.2 }} />
+          <div
+            className="orb orb-3"
+            style={{ top: "10%", right: "5%", opacity: 0.3 }}
+          />
+          <div
+            className="orb orb-1"
+            style={{ bottom: "10%", left: "10%", opacity: 0.2 }}
+          />
         </div>
 
         <div className="relative mx-auto max-w-[1400px]">
@@ -888,8 +989,13 @@ export default function HomePage() {
           </Reveal>
           <Reveal delay={0.2}>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link href={session ? "/dashboard" : "/register"} className="glass-btn-primary text-base">
-                <span>{session ? "Open WatchVault" : "Create Free Account"}</span>
+              <Link
+                href={session ? "/dashboard" : "/register"}
+                className="glass-btn-primary text-base"
+              >
+                <span>
+                  {session ? "Open WatchVault" : "Create Free Account"}
+                </span>
               </Link>
             </div>
           </Reveal>

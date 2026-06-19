@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import type { Item, Status } from "@/lib/types";
+import type { Item } from "@/lib/types";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { statusText, yearLabel } from "@/lib/utils";
@@ -47,24 +47,30 @@ export default function MediaCard({
   }
 
   const y = yearLabel(item);
-  const meta = [y, ...(item.genres?.slice(0, 2) || [])].filter(Boolean).join(" | ");
+  const meta = [y, ...(item.genres?.slice(0, 2) || [])]
+    .filter(Boolean)
+    .join(" | ");
 
   const isMovie = item.mediaType === "movie";
   const isTv = item.mediaType === "tv";
-  
-  const accentBorder = isMovie 
-    ? "group-hover:border-tui-amber" 
-    : isTv 
-      ? "group-hover:border-tui-purple" 
+
+  const accentBorder = isMovie
+    ? "group-hover:border-tui-amber"
+    : isTv
+      ? "group-hover:border-tui-purple"
       : "group-hover:border-tui-green";
 
-  const badgeColor = isMovie 
-    ? "border-tui-amber/30 text-tui-amber bg-tui-amber/5" 
-    : isTv 
-      ? "border-tui-purple/30 text-tui-purple bg-tui-purple/5" 
+  const badgeColor = isMovie
+    ? "border-tui-amber/30 text-tui-amber bg-tui-amber/5"
+    : isTv
+      ? "border-tui-purple/30 text-tui-purple bg-tui-purple/5"
       : "border-tui-green/30 text-tui-green bg-tui-green/5";
 
-  const favoriteColor = isMovie ? "text-tui-amber" : isTv ? "text-tui-purple" : "text-tui-green";
+  const favoriteColor = isMovie
+    ? "text-tui-amber"
+    : isTv
+      ? "text-tui-purple"
+      : "text-tui-green";
 
   return (
     <motion.div
@@ -83,9 +89,7 @@ export default function MediaCard({
         className={`relative overflow-hidden bg-tui-panel border border-tui-border ${accentBorder} shadow-lg transition-transform duration-200 ease-out hover:-translate-y-1`}
       >
         {/* Poster */}
-        <div
-          className="aspect-[2/3] w-full overflow-hidden border-b border-tui-border"
-        >
+        <div className="aspect-[2/3] w-full overflow-hidden border-b border-tui-border">
           {item.coverUrl && !imgFailed ? (
             <img
               src={item.coverUrl}
@@ -97,8 +101,12 @@ export default function MediaCard({
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-tui-input p-4 text-center">
               <div>
-                <div className="text-xs font-semibold text-tui-text-muted uppercase tracking-wider">{item.title}</div>
-                <div className="mt-1 text-[10px] text-tui-text-muted/50">[ NO POSTER ]</div>
+                <div className="text-xs font-semibold text-tui-text-muted uppercase tracking-wider">
+                  {item.title}
+                </div>
+                <div className="mt-1 text-[10px] text-tui-text-muted/50">
+                  [ NO POSTER ]
+                </div>
               </div>
             </div>
           )}
@@ -109,15 +117,17 @@ export default function MediaCard({
           <button
             onClick={handleFavActivate}
             className={`flex h-6 w-6 items-center justify-center font-mono text-[10px] border transition-all ${
-              item.favorite 
-                ? "border-tui-amber text-tui-amber bg-tui-amber/10" 
+              item.favorite
+                ? "border-tui-amber text-tui-amber bg-tui-amber/10"
                 : "border-tui-border text-tui-text-muted bg-tui-panel hover:border-tui-border hover:text-tui-text"
             }`}
             title={item.favorite ? "Unfavorite" : "Favorite"}
           >
-            <Star className={`h-3 w-3 ${item.favorite ? "fill-current" : ""}`} />
+            <Star
+              className={`h-3 w-3 ${item.favorite ? "fill-current" : ""}`}
+            />
           </button>
-          
+
           <button
             onClick={handleMenuEdit}
             className="flex h-6 px-1.5 items-center justify-center font-mono text-[9px] border border-tui-border text-tui-text-muted bg-tui-panel hover:border-tui-text-muted hover:text-tui-text transition-all"
@@ -137,20 +147,20 @@ export default function MediaCard({
 
         {/* Info Strip */}
         <div className="p-3 bg-tui-panel border-t border-tui-border/50">
-          <div
-            className="truncate text-[12px] font-bold text-tui-text uppercase tracking-wider"
-          >
+          <div className="truncate text-[12px] font-bold text-tui-text uppercase tracking-wider">
             {item.title}
           </div>
-          
+
           {meta && (
             <div className="mt-0.5 truncate text-[10px] text-tui-text-muted uppercase">
               {meta}
             </div>
           )}
-          
+
           <div className="mt-2 flex items-center justify-between">
-            <span className={`inline-block font-mono text-[9px] px-1.5 py-0.5 border ${badgeColor}`}>
+            <span
+              className={`inline-block font-mono text-[9px] px-1.5 py-0.5 border ${badgeColor}`}
+            >
               {statusText(item.status)}
             </span>
             {item.favorite && (

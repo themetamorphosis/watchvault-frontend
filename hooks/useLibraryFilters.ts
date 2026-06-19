@@ -3,7 +3,11 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import type { Item, MediaType } from "@/lib/types";
 
-export function useLibraryFilters(items: Item[], mediaType: MediaType, mode: "library" | "wishlist") {
+export function useLibraryFilters(
+  items: Item[],
+  mediaType: MediaType,
+  mode: "library" | "wishlist",
+) {
   const [query, setQuery] = useState("");
   const [onlyFav, setOnlyFav] = useState(false);
   const [sort, setSort] = useState<"recent" | "title" | "year">("recent");
@@ -36,7 +40,8 @@ export function useLibraryFilters(items: Item[], mediaType: MediaType, mode: "li
   // Base items by type and mode
   const pageItems = useMemo(() => {
     const byType = items.filter((i) => i.mediaType === mediaType);
-    if (mode === "wishlist") return byType.filter((i) => i.status === "wishlist");
+    if (mode === "wishlist")
+      return byType.filter((i) => i.status === "wishlist");
     return byType.filter((i) => i.status !== "wishlist");
   }, [items, mediaType, mode]);
 
@@ -77,9 +82,12 @@ export function useLibraryFilters(items: Item[], mediaType: MediaType, mode: "li
     if (sort === "year") arr.sort((a, b) => (b.year ?? -1) - (a.year ?? -1));
 
     return arr;
-  }, [pageItems, onlyFav, query, sort, genreFilter, mode]);
+  }, [pageItems, onlyFav, query, sort, genreFilter]);
 
-  const renderItems = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+  const renderItems = useMemo(
+    () => filtered.slice(0, visibleCount),
+    [filtered, visibleCount],
+  );
 
   return {
     query,
