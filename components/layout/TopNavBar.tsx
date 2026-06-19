@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -179,7 +180,7 @@ export default function TopNavBar() {
                     </button>
 
                     {/* ── Center: Nav Tabs (hidden on mobile) ── */}
-                    <nav className="hidden md:flex flex-1 items-center justify-center px-2">
+                    <nav aria-label="Main navigation" className="hidden md:flex flex-1 items-center justify-center px-2">
                         <div className={
                             isRetro 
                                 ? "flex items-center border border-nav-border bg-nav-bg/60 p-1"
@@ -341,11 +342,7 @@ export default function TopNavBar() {
                                 >
                                     {!isRetro && (
                                         session.user?.image ? (
-                                            <img 
-                                                src={session.user.image} 
-                                                alt="" 
-                                                className="h-5 w-5 rounded-full object-cover flex-shrink-0"
-                                            />
+<Image src={session.user.image} alt="User avatar" width={20} height={20} className="h-5 w-5 rounded-full object-cover flex-shrink-0" unoptimized />
                                         ) : (
                                             <span className="h-5 w-5 rounded-full flex items-center justify-center bg-gradient-to-br from-rose-500/40 to-violet-500/40 text-[9px] font-bold text-white flex-shrink-0">
                                                 {session.user?.name?.[0]?.toUpperCase() || "U"}

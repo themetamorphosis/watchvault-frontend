@@ -146,6 +146,7 @@ export function useLibraryData(userId: string) {
 
   const handleImport = useCallback(
     (newItems: Item[]) => {
+      // Add items to local state immediately for responsive UI
       setItems((prev) => {
         const map = new Map<string, Item>();
         for (const p of prev) map.set(`${p.mediaType}::${p.title.toLowerCase()}::${p.year ?? ""}`, p);
@@ -156,7 +157,7 @@ export function useLibraryData(userId: string) {
         return Array.from(map.values());
       });
       startTransition(async () => {
-        await importItemsAction(
+        const result = await importItemsAction(
           newItems.map((n) => ({
             title: n.title,
             mediaType: n.mediaType,
@@ -171,7 +172,11 @@ export function useLibraryData(userId: string) {
             runtime: n.runtime,
           })),
         );
-        refreshItems();
+        // Only refresh after batch import completes to avoid stale-overwrites-fresh race
+        if (result && typeof result === "object" && "imported" in result && (result as { imported: number }).imported > 0) {
+          // Small delay to let backend finish background enrichment
+          setTimeout(() => refreshItems(), 1500);
+        }
       });
     },
     [refreshItems],

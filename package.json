@@ -25,7 +25,8 @@
     "react-countup": "^6.5.3",
     "react-dom": "^19.2.3",
     "server-only": "^0.0.1",
-    "three": "^0.182.0"
+    "three": "^0.182.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",

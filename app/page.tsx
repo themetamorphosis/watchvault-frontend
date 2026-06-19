@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
@@ -450,7 +451,7 @@ export default function HomePage() {
                   >
                     <span className="inline-flex items-center justify-center h-6 w-6 rounded-full overflow-hidden border border-white/15 flex-shrink-0">
                       {session.user?.image ? (
-                        <img src={session.user.image} alt="" className="h-full w-full object-cover" />
+                        <Image src={session.user.image} alt="User avatar" width={48} height={48} className="h-full w-full object-cover" unoptimized />
                       ) : (
                         <span className="h-full w-full flex items-center justify-center bg-gradient-to-br from-rose-500/40 to-violet-500/40 text-[10px] font-bold">
                           {session.user?.name?.[0]?.toUpperCase() || "U"}

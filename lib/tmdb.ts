@@ -1,5 +1,9 @@
 import type { MediaType } from "@/lib/types";
 import { fetchApi } from "@/lib/apiClient";
+import {
+    TMDBSearchResponseSchema,
+    TMDBMediaDetailsSchema,
+} from "@/lib/validators";
 
 export type TMDBSearchResult = {
     tmdbId: number;
@@ -31,8 +35,13 @@ export async function searchTmdb(
     const res = await fetchApi(`/media/search?${params.toString()}`, { signal });
     if (!res.ok) return [];
 
-    const data = (await res.json()) as { results: TMDBSearchResult[] };
-    return data.results ?? [];
+    const raw = await res.json();
+    const parsed = TMDBSearchResponseSchema.safeParse(raw);
+    if (!parsed.success) {
+        console.error("TMDB search response validation failed:", parsed.error);
+        return [];
+    }
+    return parsed.data.results;
 }
 
 /**
@@ -50,8 +59,10 @@ export async function getTrendingMedia(
     const res = await fetchApi(`/media/trending?${params.toString()}`, { signal });
     if (!res.ok) return [];
 
-    const data = (await res.json()) as { results: TMDBSearchResult[] };
-    return data.results ?? [];
+    const raw = await res.json();
+    const parsed = TMDBSearchResponseSchema.safeParse(raw);
+    if (!parsed.success) return [];
+    return parsed.data.results;
 }
 
 /**
@@ -69,8 +80,10 @@ export async function getPopularMedia(
     const res = await fetchApi(`/media/popular?${params.toString()}`, { signal });
     if (!res.ok) return [];
 
-    const data = (await res.json()) as { results: TMDBSearchResult[] };
-    return data.results ?? [];
+    const raw = await res.json();
+    const parsed = TMDBSearchResponseSchema.safeParse(raw);
+    if (!parsed.success) return [];
+    return parsed.data.results;
 }
 
 /**
@@ -88,8 +101,10 @@ export async function getTopRatedMedia(
     const res = await fetchApi(`/media/top-rated?${params.toString()}`, { signal });
     if (!res.ok) return [];
 
-    const data = (await res.json()) as { results: TMDBSearchResult[] };
-    return data.results ?? [];
+    const raw = await res.json();
+    const parsed = TMDBSearchResponseSchema.safeParse(raw);
+    if (!parsed.success) return [];
+    return parsed.data.results;
 }
 
 /**
@@ -117,8 +132,10 @@ export async function discoverMedia(
     const res = await fetchApi(`/media/discover?${queryParams.toString()}`, { signal });
     if (!res.ok) return [];
 
-    const data = (await res.json()) as { results: TMDBSearchResult[] };
-    return data.results ?? [];
+    const raw = await res.json();
+    const parsed = TMDBSearchResponseSchema.safeParse(raw);
+    if (!parsed.success) return [];
+    return parsed.data.results;
 }
 
 export type TMDBCastMember = {
@@ -160,5 +177,11 @@ export async function getMediaDetails(
     const res = await fetchApi(`/media/details?${params.toString()}`, { signal });
     if (!res.ok) return null;
 
-    return (await res.json()) as TMDBMediaDetails;
+    const raw = await res.json();
+    const parsed = TMDBMediaDetailsSchema.safeParse(raw);
+    if (!parsed.success) {
+        console.error("TMDB details response validation failed:", parsed.error);
+        return null;
+    }
+    return parsed.data;
 }

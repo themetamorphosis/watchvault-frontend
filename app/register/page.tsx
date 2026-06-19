@@ -10,15 +10,16 @@ import { useSession } from "@/components/SessionProvider";
 
 export default function RegisterPage() {
     const router = useRouter();
-    const { update } = useSession();
+    const { update, status } = useSession();
     const [error, setError] = useState<string | null>(null);
     const [isPending, setIsPending] = useState(false);
 
+    // If already authenticated, redirect to dashboard
     useEffect(() => {
-        // Clear auth token when visiting register page
-        document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax";
-        update();
-    }, [update]);
+        if (status === "authenticated") {
+            router.replace("/dashboard");
+        }
+    }, [status, router]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -144,9 +145,9 @@ export default function RegisterPage() {
                                     name="password"
                                     type="password"
                                     required
-                                    minLength={6}
+                                    minLength={8}
                                     autoComplete="new-password"
-                                    placeholder="Min. 6 characters"
+                                    placeholder="Min. 8 characters"
                                     className="w-full rounded-xl bg-white/[0.04] border border-white/[0.08] pl-11 pr-4 py-3.5 text-sm text-white placeholder:text-white/20 outline-none transition-all duration-300 focus:border-white/20 focus:bg-white/[0.06] focus:ring-1 focus:ring-white/10"
                                 />
                             </div>
@@ -164,7 +165,7 @@ export default function RegisterPage() {
                                     name="confirmPassword"
                                     type="password"
                                     required
-                                    minLength={6}
+                                    minLength={8}
                                     autoComplete="new-password"
                                     placeholder="Repeat your password"
                                     className="w-full rounded-xl bg-white/[0.04] border border-white/[0.08] pl-11 pr-4 py-3.5 text-sm text-white placeholder:text-white/20 outline-none transition-all duration-300 focus:border-white/20 focus:bg-white/[0.06] focus:ring-1 focus:ring-white/10"
@@ -219,7 +220,7 @@ export default function RegisterPage() {
                         </p>
                     </motion.div>
                 </div>
-            </motion.div >
-        </div >
+            </motion.div>
+        </div>
     );
 }

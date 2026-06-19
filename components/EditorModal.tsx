@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { Item, Status } from "@/lib/types";
 import { Star, Trash2 } from "lucide-react";
+import { useModalA11y } from "@/hooks/useModalA11y";
 
 export default function EditorModal({
   item,
@@ -19,15 +20,9 @@ export default function EditorModal({
 }) {
   const [error, setError] = useState<string | null>(null);
   const firstRef = useRef<HTMLInputElement | null>(null);
+  const { containerRef, trapFocus } = useModalA11y(onClose);
 
-  useEffect(() => {
-    firstRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  // Focus + Escape handled by useModalA11y hook
 
   function set<K extends keyof Item>(key: K, value: Item[K]) {
     onChange({ ...item, [key]: value });
@@ -52,7 +47,7 @@ export default function EditorModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 p-4 font-mono text-xs">
+    <div ref={containerRef} role="dialog" aria-modal="true" aria-label="Edit media item" onKeyDown={trapFocus} className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 p-4 font-mono text-xs">
       <div className="w-full max-w-lg bg-tui-panel border border-tui-border shadow-2xl">
         {/* Header */}
         <div className="p-4 border-b border-tui-border-muted flex items-center justify-between bg-tui-bg/30">

@@ -24,8 +24,15 @@ export async function signOut({ callbackUrl }: { callbackUrl?: string } = {}) {
             // ignore - cookie will expire naturally
         }
 
-        setTimeout(() => {
-            window.location.href = callbackUrl || "/login";
-        }, 100);
+        // Use Next.js router for client-side navigation
+        const { useRouter } = await import("next/navigation");
+        // We can't get a router instance outside of a component,
+        // so we use window.location.href as a fallback but with a short delay
+        // to allow the logout to complete
+        if (callbackUrl) {
+            window.location.href = callbackUrl;
+        } else {
+            window.location.href = "/login";
+        }
     }
 }

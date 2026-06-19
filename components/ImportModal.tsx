@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState, useRef } from "react";
 import type { Item, MediaType, Status } from "@/lib/types";
+import { useModalA11y } from "@/hooks/useModalA11y";
 
 type Parsed = {
   title: string;
@@ -77,6 +78,7 @@ export default function ImportModal({
   const [tab] = useState<MediaType>(defaultMediaType);
   const [text, setText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { containerRef, trapFocus } = useModalA11y(onClose);
 
   const parsedPreview = useMemo(() => {
     if (!text.trim()) return [];

@@ -4,35 +4,17 @@ import React, { useState } from "react";
 import type { Item, Status } from "@/lib/types";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
-
-function statusText(s: Status) {
-  if (s === "watched") return "Watched";
-  if (s === "pending") return "Pending";
-  return "Wishlist";
-}
-
-function yearLabel(item: Item): string {
-  if (item.mediaType === "movie") return item.year ? String(item.year) : "";
-  const start = item.year;
-  const end = item.endYear;
-  const running = item.running;
-  if (start && end) return `${start}–${end}`;
-  if (start && running) return `${start}–Running`;
-  if (!start && running) return "Running";
-  if (start) return String(start);
-  return "";
-}
+import { statusText, yearLabel } from "@/lib/utils";
 
 export default function MediaCard({
   item,
-  layoutId,
   onFav,
   onOpen,
   onEdit,
   onDelete,
 }: {
   item: Item;
-  layoutId?: string;
+
   onFav: () => void;
   onOpen: () => void;
   onEdit: () => void;
@@ -40,10 +22,12 @@ export default function MediaCard({
 }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [prevCover, setPrevCover] = useState(item.coverUrl);
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
 
   if (item.coverUrl !== prevCover) {
     setPrevCover(item.coverUrl);
     setImgFailed(false);
+    setLoadedUrl(null);
   }
 
   function handleFavActivate(e: React.SyntheticEvent) {
@@ -96,24 +80,18 @@ export default function MediaCard({
       title="Open"
     >
       <motion.div
-        layoutId={layoutId}
-        whileHover={{ y: -4 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        className={`relative overflow-hidden bg-tui-panel border border-tui-border ${accentBorder} shadow-lg`}
+        className={`relative overflow-hidden bg-tui-panel border border-tui-border ${accentBorder} shadow-lg transition-transform duration-200 ease-out hover:-translate-y-1`}
       >
         {/* Poster */}
-        <motion.div
-          layoutId={layoutId ? `img-${layoutId}` : undefined}
+        <div
           className="aspect-[2/3] w-full overflow-hidden border-b border-tui-border"
         >
           {item.coverUrl && !imgFailed ? (
-            <motion.img
+            <img
               src={item.coverUrl}
               alt={item.title}
-              className="h-full w-full object-cover transition-all duration-200 ease-out group-hover:scale-[1.02] filter brightness-90 group-hover:brightness-100 grayscale group-hover:grayscale-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              className={`h-full w-full object-cover transition-all duration-200 ease-out group-hover:scale-[1.02] filter brightness-90 group-hover:brightness-100 grayscale group-hover:grayscale-0 ${loadedUrl === item.coverUrl ? "opacity-100" : "opacity-0"}`}
+              onLoad={() => setLoadedUrl(item.coverUrl ?? null)}
               onError={() => setImgFailed(true)}
             />
           ) : (
@@ -124,7 +102,7 @@ export default function MediaCard({
               </div>
             </div>
           )}
-        </motion.div>
+        </div>
 
         {/* Hover Action controls (Monospace CLI buttons) */}
         <div className="absolute top-2 right-2 z-20 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -159,12 +137,11 @@ export default function MediaCard({
 
         {/* Info Strip */}
         <div className="p-3 bg-tui-panel border-t border-tui-border/50">
-          <motion.div
-            layoutId={layoutId ? `title-${layoutId}` : undefined}
+          <div
             className="truncate text-[12px] font-bold text-tui-text uppercase tracking-wider"
           >
             {item.title}
-          </motion.div>
+          </div>
           
           {meta && (
             <div className="mt-0.5 truncate text-[10px] text-tui-text-muted uppercase">

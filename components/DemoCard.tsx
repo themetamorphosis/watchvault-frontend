@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import TMDBImage from "@/components/ui/TMDBImage";
 import {
     Heart, Star, Eye, Clock, Bookmark, Film, Tv, Sparkles,
     TrendingUp, BarChart3, Activity, Zap, Search, SlidersHorizontal,
@@ -226,7 +227,7 @@ function LibraryTab({ highlightPoster }: { highlightPoster: number | null }) {
                                 <div className={`relative overflow-hidden rounded-md bg-white/[0.03] ring-1 transition-all duration-300 ${isHighlighted ? "ring-white/30 scale-[1.04]" : "ring-white/[0.06]"
                                     }`}>
                                     <div className="aspect-[2/3] w-full">
-                                        <img src={item.poster} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
+                                        <TMDBImage src={item.poster} alt={item.title} fill className="h-full w-full object-cover" />
                                     </div>
                                     {/* Hover overlay */}
                                     <AnimatePresence>
@@ -419,7 +420,7 @@ function DiscoveryTab() {
                     >
                         {/* Background Blur */}
                         <div className="absolute inset-0 scale-110">
-                            <img src={featuredItems[activeIndex].poster} className="w-full h-full object-cover blur-xl opacity-30" />
+                            <TMDBImage src={featuredItems[activeIndex].poster} alt="" fill className="w-full h-full object-cover blur-xl opacity-30" />
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent" />
                         <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a]/90 via-[#0a0a0a]/50 to-transparent" />
@@ -431,7 +432,7 @@ function DiscoveryTab() {
                                 transition={{ delay: 0.2, duration: 0.5 }}
                                 className="h-full aspect-[2/3] rounded-md shadow-[0_8px_30px_rgb(0,0,0,0.8)] overflow-hidden ring-1 ring-white/20 flex-shrink-0"
                             >
-                                <img src={featuredItems[activeIndex].poster} className="w-full h-full object-cover" />
+                                <TMDBImage src={featuredItems[activeIndex].poster} alt={featuredItems[activeIndex].title} fill className="w-full h-full object-cover" />
                             </motion.div>
 
                             <div className="flex-1 min-w-0 pr-4">
@@ -534,7 +535,7 @@ function DiscoveryTab() {
                             className="flex-shrink-0 w-[95px] group cursor-pointer"
                         >
                             <div className="rounded-lg overflow-hidden border border-white/10 relative aspect-[2/3] mb-2 shadow-lg">
-                                <img src={item.poster} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                                <TMDBImage src={item.poster} alt={item.title} fill className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
                                     <div className="flex justify-between items-center">
@@ -572,7 +573,7 @@ function DiscoveryTab() {
                             className="flex-shrink-0 w-[95px] group cursor-pointer"
                         >
                             <div className="rounded-lg overflow-hidden border border-white/10 relative aspect-[2/3] mb-2 shadow-lg">
-                                <img src={item.poster} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                                <TMDBImage src={item.poster} alt={item.title} fill className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
                                     <div className="flex justify-between items-center">

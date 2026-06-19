@@ -3,8 +3,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Item, MediaType, Status } from '@/lib/types';
+import TMDBImage from '@/components/ui/TMDBImage';
+import { SkeletonGrid } from '@/components/ui/Skeleton';
 import MediaCard from '@/components/MediaCard';
 import EditorModal from '@/components/EditorModal';
 import ImportModal from '@/components/ImportModal';
@@ -16,6 +18,7 @@ import { useSession } from '@/components/SessionProvider';
 import { useRetroTheme } from '@/components/layout/RetroThemeContext';
 import { useLibraryData } from '@/hooks/useLibraryData';
 import { useLibraryFilters } from '@/hooks/useLibraryFilters';
+import { statusText } from '@/lib/utils';
 import {
   Film,
   Tv,
@@ -31,12 +34,6 @@ const SORT_OPTIONS: { value: 'recent' | 'title' | 'year'; label: string }[] = [
   { value: 'title', label: 'Name (A → Z)' },
   { value: 'year', label: 'Release year' },
 ];
-
-function statusText(s: Status) {
-  if (s === "watched") return "Watched";
-  if (s === "pending") return "Pending";
-  return "Wishlist";
-}
 
 function SortDropdown({ value, onChange }: { value: string; onChange: (v: 'recent' | 'title' | 'year') => void }) {
   const [open, setOpen] = useState(false);
@@ -463,7 +460,7 @@ export default function LibraryPage({
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="QUERY TITLE, GENRES, YEARS..."
+              aria-label="Search your library" placeholder="QUERY TITLE, GENRES, YEARS..."
               className="w-full bg-tui-input border border-tui-border pl-24 pr-10 py-2.5 text-xs text-tui-text placeholder:text-tui-text-muted/30 focus:border-tui-text focus:bg-tui-input outline-none transition-all"
             />
             {query && (
@@ -480,14 +477,10 @@ export default function LibraryPage({
         </div>
 
         {/* Media display grid/table */}
-        <LayoutGroup id="media-grid">
+        
           <AnimatePresence mode="wait">
             {!mounted || (!ready && items.length === 0) ? (
-              <div key="loading" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-5 gap-y-8 pb-10">
-                {Array.from({ length: 24 }).map((_, i) => (
-                  <div key={`skeleton-${i}`} className="aspect-[2/3] w-full bg-tui-input border border-tui-border animate-pulse" />
-                ))}
-              </div>
+              <SkeletonGrid count={24} cols="lg:grid-cols-5 xl:grid-cols-6" />
             ) : renderItems.length > 0 ? (
               (mounted && viewMode === 'table') ? (
                 <motion.div 
@@ -525,7 +518,7 @@ export default function LibraryPage({
                                 onClick={() => setExpandedItem(item)}
                               >
                                 {item.coverUrl ? (
-                                  <img src={item.coverUrl} alt="" className="w-full h-full object-cover filter brightness-90 group-hover:brightness-100 transition-all" />
+                                  <TMDBImage src={item.coverUrl} alt={item.title} fill className="w-full h-full object-cover filter brightness-90 group-hover:brightness-100 transition-all" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-[8px] text-tui-text-muted/60">N/A</div>
                                 )}
@@ -604,7 +597,7 @@ export default function LibraryPage({
                     <MediaCard
                       key={item.id}
                       item={item}
-                      layoutId={`card-${item.id}`}
+                      
                       onOpen={() => setExpandedItem(item)}
                       onEdit={() => openEdit(item)}
                       onDelete={() => handleDelete(item.id)}
@@ -644,7 +637,7 @@ export default function LibraryPage({
               <ExpandableCardOverlay
                 key={expandedItem.id}
                 item={expandedItem}
-                layoutId={`card-${expandedItem.id}`}
+                
                 onClose={() => setExpandedItem(null)}
                 onEdit={() => {
                   const it = expandedItem;
@@ -662,7 +655,7 @@ export default function LibraryPage({
               />
             )}
           </AnimatePresence>
-        </LayoutGroup>
+        
       </div>
 
       {/* Modals */}

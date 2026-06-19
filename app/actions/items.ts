@@ -2,6 +2,7 @@
 
 import { API_BASE } from "@/lib/auth";
 import type { MediaType, Status } from "@/lib/types";
+import { safeParseWatchlistItems } from "@/lib/validators";
 
 type ItemInput = {
     id?: string;
@@ -44,15 +45,27 @@ export async function getUserId(): Promise<string> {
 export async function getItems() {
     const res = await authedFetch(`/watchlist`, { cache: "no-store" });
     if (!res.ok) return [];
-    const items = await res.json();
-    return items.map((i: unknown) => {
-        const item = i as { createdAt: string | number, updatedAt: string | number } & Record<string, unknown>;
-        return {
-            ...item,
-            createdAt: new Date(item.createdAt).getTime(),
-            updatedAt: new Date(item.updatedAt).getTime(),
-        };
-    });
+    const raw = await res.json();
+
+    const parsed = safeParseWatchlistItems(raw);
+    if (!parsed.success) {
+        console.error("Watchlist items validation failed:", parsed.error);
+        return [];
+    }
+
+    return parsed.data.map((item) => ({
+        ...item,
+        notes: item.notes ?? undefined,
+        description: item.description ?? undefined,
+        coverUrl: item.coverUrl ?? undefined,
+        genres: item.genres ?? undefined,
+        year: item.year ?? undefined,
+        endYear: item.endYear ?? undefined,
+        running: item.running ?? undefined,
+        runtime: item.runtime ?? undefined,
+        createdAt: item.createdAt ? new Date(item.createdAt).getTime() : Date.now(),
+        updatedAt: item.updatedAt ? new Date(item.updatedAt).getTime() : Date.now(),
+    }));
 }
 
 export async function upsertItem(data: ItemInput) {
@@ -97,14 +110,24 @@ export async function updateMetadata(id: string, payload: { coverUrl?: string; g
 }
 
 export async function importItems(items: ItemInput[]) {
+    // Use batch endpoint for bulk imports (single HTTP request instead of N sequential ones)
+    const res = await authedFetch(`/watchlist/batch`, {
+        method: "POST",
+        body: JSON.stringify(items),
+    });
+    if (res.ok) {
+        const data = await res.json();
+        return { success: true, imported: data.imported ?? 0 };
+    }
+    // Fallback: if batch endpoint not available, try sequential (for old backends)
     let imported = 0;
     for (const item of items) {
         try {
-            const res = await authedFetch(`/watchlist`, {
+            const r = await authedFetch(`/watchlist`, {
                 method: "POST",
                 body: JSON.stringify(item),
             });
-            if (res.ok) imported++;
+            if (r.ok) imported++;
         } catch {
             // skip
         }

@@ -25,7 +25,7 @@ async function executeTool(name: string, args: Record<string, unknown>, token: s
             const res = await fetch(`${BACKEND_API}/watchlist`, { headers: { Authorization: `Bearer ${token}` } });
             if (!res.ok) return { library: [], error: 'Failed to fetch user library.' };
             const data = await res.json();
-            return { library: data.map((item: any) => ({ title: item.title, mediaType: item.mediaType, status: item.status, year: item.year })), error: null };
+            return { library: data.map((item: { title: string; mediaType: string; status: string; year: number }) => ({ title: item.title, mediaType: item.mediaType, status: item.status, year: item.year })), error: null };
         }
         case 'addToLibrary': {
             const res = await fetch(`${BACKEND_API}/watchlist`, {
@@ -203,7 +203,7 @@ export async function POST(req: Request) {
                         break;
                     }
 
-                    conversation.push({ role: 'assistant', content: assistantMessage || null, tool_calls: toolCalls.map(tc => ({ id: tc.id, type: 'function', function: tc.function })) } as any);
+                    conversation.push({ role: 'assistant' as const, content: assistantMessage || null, tool_calls: toolCalls.map(tc => ({ id: tc.id, type: 'function' as const, function: tc.function })) });
 
                     for (const tc of toolCalls) {
                         try {

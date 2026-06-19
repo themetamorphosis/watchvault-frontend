@@ -26,14 +26,12 @@ function getStatusText(s: string) {
 
 export default function ExpandableCardOverlay({
     item,
-    layoutId,
     onClose,
     onEdit,
     onDelete,
     onFav,
 }: {
     item: Item;
-    layoutId: string;
     onClose: () => void;
     onEdit: () => void;
     onDelete: () => void;
@@ -94,10 +92,10 @@ export default function ExpandableCardOverlay({
                 {/* TUI detail panel */}
                 <motion.div
                     ref={panelRef}
-                    layoutId={layoutId}
-                    initial={{ opacity: 1 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 1, pointerEvents: "none", transition: { duration: 0.15 } }}
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
                     className="
                         pointer-events-auto
                         relative w-full max-w-[800px] h-[80vh] md:h-[420px]
