@@ -70,6 +70,9 @@ export default function TopNavBar() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [, setToastExiting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
   const profileRef = useRef<HTMLDivElement>(null);
   const themeRef = useRef<HTMLDivElement>(null);
   const toastShownRef = useRef<Set<string>>(new Set());
@@ -122,19 +125,25 @@ export default function TopNavBar() {
       (t.href === "/wishlist" && pathname?.startsWith("/wishlist")),
   );
 
-  const isRetro = theme.startsWith("retro");
-  const currentThemeInfo = THEMES.find((t) => t.value === theme) || THEMES[0];
+  const isRetro = mounted && theme.startsWith("retro");
+  const currentThemeInfo =
+    THEMES.find((t) => t.value === (mounted ? theme : "modern-dark")) ||
+    THEMES[0];
 
   return (
     <>
       <header
+        suppressHydrationWarning
         className={
           isRetro
             ? "sticky top-0 z-50 bg-nav-bg border-b border-nav-border font-mono text-sm uppercase"
             : "sticky top-0 z-50 bg-tui-bg/75 border-b border-tui-border backdrop-blur-xl text-sm font-sans"
         }
       >
-        <div className="mx-auto max-w-[1440px] px-6 lg:px-10 h-20 flex items-center justify-between gap-4">
+        <div
+          suppressHydrationWarning
+          className="mx-auto max-w-[1440px] px-6 lg:px-10 h-20 flex items-center justify-between gap-4"
+        >
           {/* ── Left: Logo ── */}
           {isRetro ? (
             <Link

@@ -332,7 +332,7 @@ export default function LibraryPage({
         : "border-tui-green";
   const mediaPath = mediaType === "movie" ? "movies" : mediaType;
 
-  const isRetro = theme.startsWith("retro");
+  const isRetro = mounted && theme.startsWith("retro");
 
   return (
     <div

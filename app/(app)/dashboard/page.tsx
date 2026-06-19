@@ -36,10 +36,10 @@ export default function DashboardPage() {
   const userEmail = session?.user?.email || "";
 
   const { theme } = useRetroTheme();
-  const isRetro = theme.startsWith("retro");
 
   const { items, ready, mounted, handleUpsert, ensureCover, syncingRefs } =
     useLibraryData(userId);
+  const isRetro = mounted && theme.startsWith("retro");
   const stats = useDashboardStats(items);
   const heatmapData = useHeatmapData(items);
   const topGenres = useTopGenres(items, 5);

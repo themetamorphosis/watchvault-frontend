@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { Film, Tv, Sparkles, SlidersHorizontal, Compass } from "lucide-react";
 import { useRetroTheme } from "@/components/layout/RetroThemeContext";
 import {
@@ -13,7 +14,12 @@ import {
   type TMDBSearchResult,
   type TMDBMediaDetails,
 } from "@/lib/tmdb";
-import { getItems, upsertItem, deleteItem } from "@/app/actions/items";
+import {
+  getItems,
+  upsertItem,
+  deleteItem,
+  toggleFavorite,
+} from "@/app/actions/items";
 import type { Item, MediaType, Status } from "@/lib/types";
 import {
   MOVIE_GENRES,
@@ -28,8 +34,10 @@ import DiscoverySpotlight from "@/components/discovery/DiscoverySpotlight";
 
 export default function DiscoveryPage() {
   const { theme, scanlines } = useRetroTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  const isRetro = theme.startsWith("retro");
+  const isRetro = mounted && theme.startsWith("retro");
 
   /* Tab navigation */
   const [activeTab, setActiveTab] = useState<ListType>("trending");
@@ -127,12 +135,13 @@ export default function DiscoveryPage() {
     getTrendingMedia(mediaType, "week", controller.signal)
       .then((res) => {
         if (!controller.signal.aborted && res.length > 0) {
-          setSpotlightItems(res.slice(0, 5)); // Keep top 5 trending titles for slideshow
+          setSpotlightItems(res.slice(0, 5));
           setSpotlightIdx(0);
           setLoadingSpotlight(false);
         }
       })
       .catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
         if (!controller.signal.aborted) {
           console.error("Failed to fetch spotlight titles:", err);
           setLoadingSpotlight(false);
@@ -154,6 +163,10 @@ export default function DiscoveryPage() {
   const spotlightItem = spotlightItems[spotlightIdx];
 
   /* ── Fetch Grid Content (Based on Active Tab) ─────────────── */
+  const loadDataRef = useRef<
+    (pageNum: number, append?: boolean) => Promise<void>
+  >(() => Promise.resolve());
+
   const loadData = useCallback(
     async (pageNum: number, append: boolean = false) => {
       setLoading(true);
@@ -193,6 +206,7 @@ export default function DiscoveryPage() {
           setLoading(false);
         }
       } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
         if (!controller.signal.aborted) {
           console.error("Error loading discovery grid:", err);
           setLoading(false);
@@ -201,6 +215,17 @@ export default function DiscoveryPage() {
     },
     [activeTab, mediaType, genreFilter, decadeFilter, sortBy],
   );
+
+  // Keep ref in sync so stale closures always call the latest loadData
+  useEffect(() => {
+    loadDataRef.current = loadData;
+  }, [loadData]);
+
+  // Auto-load when tab, media type, or filters change
+  useEffect(() => {
+    setPage(1);
+    loadDataRef.current(1, false);
+  }, [activeTab, mediaType, genreFilter, decadeFilter, sortBy]);
 
   /* Load more items */
   const handleLoadMore = () => {
@@ -227,6 +252,7 @@ export default function DiscoveryPage() {
         }
       })
       .catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
         if (!controller.signal.aborted) {
           console.error("Failed to fetch detailed info:", err);
           setLoadingDetails(false);
@@ -253,20 +279,34 @@ export default function DiscoveryPage() {
       runtime: (media as TMDBMediaDetails).runtime || undefined,
     };
 
-    try {
-      await upsertItem(payload);
+    const result = await upsertItem(payload);
+    if (result.success) {
+      toast.success(`Added "${media.title}" to ${status}`);
       loadWatchlist();
-    } catch (err) {
-      console.error("Error adding to watchlist:", err);
+    } else {
+      toast.error(result.error || "Failed to add to watchlist");
     }
   };
 
   const handleRemoveFromWatchlist = async (itemId: string) => {
-    try {
-      await deleteItem(itemId);
+    const result = await deleteItem(itemId);
+    if (result.success) {
+      toast.success("Removed from watchlist");
       loadWatchlist();
-    } catch (err) {
-      console.error("Error removing from watchlist:", err);
+    } else {
+      toast.error(result.error || "Failed to remove from watchlist");
+    }
+  };
+
+  const handleToggleFavorite = async (itemId: string) => {
+    const result = await toggleFavorite(itemId);
+    if (result.success) {
+      toast.success(
+        result.favorite ? "Added to favorites" : "Removed from favorites",
+      );
+      loadWatchlist();
+    } else {
+      toast.error(result.error || "Failed to toggle favorite");
     }
   };
 
@@ -343,10 +383,8 @@ export default function DiscoveryPage() {
                     setMediaType(type);
                     setGenreFilter("");
                     setDecadeFilter("");
+                    setSpotlightItems([]);
                     setLoadingSpotlight(true);
-                    setPage(1);
-                    setHasMore(true);
-                    loadData(1, false);
                   }}
                   className={`px-4 py-2 uppercase border transition-all flex items-center gap-1.5 rounded-lg ${
                     active
@@ -392,12 +430,7 @@ export default function DiscoveryPage() {
               ).map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    setPage(1);
-                    setHasMore(true);
-                    loadData(1, false);
-                  }}
+                  onClick={() => setActiveTab(tab.id)}
                   className={`relative px-5 py-2 rounded-full uppercase tracking-wider transition-colors cursor-pointer z-10 ${
                     activeTab === tab.id
                       ? "text-zinc-950 font-bold"
@@ -431,12 +464,7 @@ export default function DiscoveryPage() {
               ).map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    setPage(1);
-                    setHasMore(true);
-                    loadData(1, false);
-                  }}
+                  onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-1.5 uppercase transition-all ${
                     activeTab === tab.id
                       ? "bg-tui-input text-tui-amber font-bold"
@@ -470,31 +498,13 @@ export default function DiscoveryPage() {
               decadeFilter={decadeFilter}
               sortBy={sortBy}
               genres={currentGenres}
-              onGenreChange={(v) => {
-                setGenreFilter(v);
-                setPage(1);
-                setHasMore(true);
-                loadData(1, false);
-              }}
-              onDecadeChange={(v) => {
-                setDecadeFilter(v);
-                setPage(1);
-                setHasMore(true);
-                loadData(1, false);
-              }}
-              onSortChange={(v) => {
-                setSortBy(v);
-                setPage(1);
-                setHasMore(true);
-                loadData(1, false);
-              }}
+              onGenreChange={(v) => setGenreFilter(v)}
+              onDecadeChange={(v) => setDecadeFilter(v)}
+              onSortChange={(v) => setSortBy(v)}
               onReset={() => {
                 setGenreFilter("");
                 setDecadeFilter("");
                 setSortBy("popularity.desc");
-                setPage(1);
-                setHasMore(true);
-                loadData(1, false);
               }}
             />
           )}
@@ -570,6 +580,7 @@ export default function DiscoveryPage() {
         onSetShowRatingSelector={setShowRatingSelector}
         onAddToWatchlist={handleAddToWatchlist}
         onRemoveFromWatchlist={handleRemoveFromWatchlist}
+        onToggleFavorite={handleToggleFavorite}
       />
     </div>
   );

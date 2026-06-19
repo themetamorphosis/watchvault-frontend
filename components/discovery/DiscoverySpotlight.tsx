@@ -149,43 +149,61 @@ export default function DiscoverySpotlight({
         </AnimatePresence>
       ) : (
         /* Retro Spotlight */
-        <div className="border border-tui-border bg-tui-panel p-4 font-mono text-xs space-y-3">
-          <div className="text-tui-amber font-bold uppercase tracking-wider">
+        <div className="border border-tui-border bg-tui-panel p-5 font-mono space-y-4">
+          <div className="text-tui-amber font-bold uppercase tracking-wider text-sm">
             *** FEATURED SPOTLIGHT ***
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-1 border border-tui-border bg-tui-bg aspect-[2/3] overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div
+              onClick={() => onSelect(spotlightItem)}
+              className="relative md:col-span-1 border border-tui-border bg-tui-bg aspect-[2/3] overflow-hidden cursor-pointer hover:border-tui-amber transition-colors"
+            >
               {spotlightItem.posterUrl ? (
                 <TMDBImage
                   src={spotlightItem.posterUrl}
                   alt={spotlightItem.title}
                   fill
-                  className="w-full h-full object-cover filter grayscale"
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[10px] text-tui-text-muted uppercase">
+                <div className="w-full h-full flex items-center justify-center text-xs text-tui-text-muted uppercase">
                   No Image
                 </div>
               )}
             </div>
-            <div className="md:col-span-3 space-y-2">
-              <div className="text-tui-text font-bold uppercase text-sm">
+            <div className="md:col-span-3 space-y-3">
+              <div
+                onClick={() => onSelect(spotlightItem)}
+                className="text-tui-text font-bold uppercase text-lg cursor-pointer hover:text-tui-amber transition-colors"
+              >
                 {spotlightItem.title}
               </div>
-              <div className="text-tui-text-muted">
+              <div className="text-tui-text-muted text-sm">
                 {spotlightItem.year || "N/A"}{" "}
                 {spotlightItem.voteAverage
                   ? `| RATING: ${spotlightItem.voteAverage.toFixed(1)}`
                   : ""}
               </div>
-              <div className="text-tui-text-muted leading-relaxed line-clamp-3">
+              <div className="text-tui-text-muted leading-relaxed line-clamp-3 text-sm">
                 {spotlightItem.overview || "No description available."}
               </div>
+              {spotlightItem.genres && spotlightItem.genres.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {spotlightItem.genres.slice(0, 3).map((g) => (
+                    <span
+                      key={g}
+                      className="px-2 py-0.5 border border-tui-border text-tui-text-muted text-[10px] uppercase"
+                    >
+                      [{g}]
+                    </span>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-2 pt-2">
                 {watchlistItem ? (
                   <button
                     onClick={() => onRemove(watchlistItem.id)}
-                    className="px-3 py-1 border border-red-950 text-red-500 bg-red-950/10 hover:border-red-600 uppercase text-[10px]"
+                    className="px-4 py-1.5 border border-red-950 text-red-500 bg-red-950/10 hover:border-red-600 uppercase text-xs"
                   >
                     [DEL]
                   </button>
@@ -193,18 +211,24 @@ export default function DiscoverySpotlight({
                   <>
                     <button
                       onClick={() => onAdd(spotlightItem, "watched")}
-                      className="px-3 py-1 border border-tui-border text-tui-green hover:border-tui-green uppercase text-[10px]"
+                      className="px-4 py-1.5 border border-tui-border text-tui-green hover:border-tui-green uppercase text-xs"
                     >
                       [+WATCHED]
                     </button>
                     <button
                       onClick={() => onAdd(spotlightItem, "wishlist")}
-                      className="px-3 py-1 border border-tui-border text-tui-text-muted hover:border-tui-amber uppercase text-[10px]"
+                      className="px-4 py-1.5 border border-tui-border text-tui-text-muted hover:border-tui-amber uppercase text-xs"
                     >
                       [+WISHLIST]
                     </button>
                   </>
                 )}
+                <button
+                  onClick={() => onSelect(spotlightItem)}
+                  className="px-4 py-1.5 border border-tui-border text-tui-text-muted hover:border-tui-text uppercase text-xs"
+                >
+                  [DETAILS]
+                </button>
               </div>
             </div>
           </div>

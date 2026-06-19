@@ -27,6 +27,7 @@ interface DetailOverlayProps {
     status: Status,
   ) => void;
   onRemoveFromWatchlist: (itemId: string) => void;
+  onToggleFavorite: (itemId: string) => void;
 }
 
 export default function DetailOverlay({
@@ -45,8 +46,9 @@ export default function DetailOverlay({
   onSetShowRatingSelector,
   onAddToWatchlist,
   onRemoveFromWatchlist,
+  onToggleFavorite,
 }: DetailOverlayProps) {
-  useModalA11y(onClose);
+  useModalA11y(onClose, !!selectedItem);
 
   return (
     <AnimatePresence>
@@ -65,18 +67,6 @@ export default function DetailOverlay({
                 : "bg-black/20 border border-white/10 rounded-[32px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] overflow-hidden backdrop-blur-3xl text-white font-sans"
             }`}
           >
-            {/* Cinematic background backdrop (upper half) */}
-            {!isRetro && details && details.backdropUrl && (
-              <div className="absolute top-0 left-0 w-full h-[400px] z-0 overflow-hidden pointer-events-none">
-                <div
-                  className="w-full h-full bg-cover bg-center filter brightness-[0.25] saturate-[1.2] scale-102"
-                  style={{ backgroundImage: `url(${details.backdropUrl})` }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/20" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-black/10" />
-              </div>
-            )}
-
             {/* Close Button */}
             <button
               onClick={onClose}
@@ -291,7 +281,7 @@ export default function DetailOverlay({
                             </span>
                             <div className="flex flex-wrap gap-1.5 flex-1">
                               {displayWriters.map((w, idx) => (
-                                <React.Fragment key={w}>
+                                <React.Fragment key={`${w}-${idx}`}>
                                   {idx > 0 && (
                                     <span
                                       className={
@@ -328,7 +318,7 @@ export default function DetailOverlay({
                             <div className="flex items-center justify-between flex-1 min-w-0">
                               <div className="flex flex-wrap gap-1.5">
                                 {displayStars.map((s, idx) => (
-                                  <React.Fragment key={s.name}>
+                                  <React.Fragment key={`${s.name}-${idx}`}>
                                     {idx > 0 && (
                                       <span
                                         className={
@@ -376,7 +366,7 @@ export default function DetailOverlay({
                             <div className="flex flex-wrap gap-1.5 flex-1 justify-start">
                               {displayComposer && displayComposer.length > 0 ? (
                                 displayComposer.map((name, idx) => (
-                                  <React.Fragment key={name}>
+                                  <React.Fragment key={`${name}-${idx}`}>
                                     {idx > 0 && (
                                       <span
                                         className={
@@ -577,12 +567,9 @@ export default function DetailOverlay({
                                 Remove from Watchlist
                               </button>
                               <button
-                                onClick={() => {
-                                  const dbItem = watchlistItem;
-                                  if (dbItem) {
-                                    onRemoveFromWatchlist(dbItem.id);
-                                  }
-                                }}
+                                onClick={() =>
+                                  onToggleFavorite(watchlistItem.id)
+                                }
                                 className={`flex items-center gap-2 px-5 py-2.5 border text-sm font-semibold transition-all cursor-pointer ${
                                   isRetro
                                     ? "border-tui-border bg-tui-bg text-tui-text hover:border-tui-amber font-mono"
@@ -649,7 +636,7 @@ export default function DetailOverlay({
                           >
                             Cast
                           </h3>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {displayCast.map((c) => (
                               <a
                                 key={c.name}
